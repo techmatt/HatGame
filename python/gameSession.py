@@ -1,8 +1,12 @@
 import os
 import sys
+import random
 from datetime import datetime
 from enum import Enum
 from collections.abc import Iterable
+
+class GameError(Exception):
+    pass
 
 class GameMainPhase(Enum):
     Write = 1,
@@ -38,17 +42,17 @@ class GameSession:
         #self.id = uuid.uuid1().hex
         self.showLog = True
 
-        self.log('game start', id, pharsesPerPlayer, secondsPerTurn, playerIDs)
+        print('game start', id, phrasesPerPlayer, secondsPerTurn, playerIDs)
         self.id = id
-
-        self.phraesPerPlayer = phrasesPerPlayer
+        self.phrasesPerPlayer = phrasesPerPlayer
         self.secondsPerTurn = secondsPerTurn
+
         self.players = []
         self.playersByID = {}
         self.teams = []
         self.teams.append(Team(0))
         self.teams.append(Team(1))
-        for idx, playerID in enuemrate(playerIDs):
+        for idx, playerID in enumerate(playerIDs):
             teamIdx = idx % 2
             player = Player(playerID, idx, teamIdx)
             self.players.append(player)
@@ -72,24 +76,24 @@ class GameSession:
     def assertActivePlayer(self, playerID):
         activePlayer = self.players[self.activePlayerIdx]
         if activePlayer.id != playerID:
-            raise Exception(playerID + ' tried to act but it is ' + activePlayer.id + '\'s turn')
+            raise GameError(playerID + ' tried to act but it is ' + activePlayer.id + '\'s turn')
         return activePlayer
 
     def assertMainPhase(self, validPhases):
         if isinstance(validPhases, Iterable):
             if self.mainPhase not in validPhases:
-                raise Exception('invalid main phase: ' + self.mainPhase)
+                raise GameError('invalid main phase: ' + self.mainPhase)
         else:
             if self.mainPhase != validPhases:
-                raise Exception('invalid main phase: ' + self.mainPhase)
+                raise GameError('invalid main phase: ' + self.mainPhase)
 
     def assertSubPhase(self, validPhases):
         if isinstance(validPhases, Iterable):
             if self.subPhase not in validPhases:
-                raise Exception('invalid subphase: ' + self.subPhase)
+                raise GameError('invalid subphase: ' + str(self.subPhase))
         else:
             if self.subPhase != validPhases:
-                raise Exception('invalid subphase: ' + self.subPhase)
+                raise GameError('invalid subphase: ' + str(self.subPhase))
 
     def newMainPhase(self, newMainPhase):
         self.log('new main phase: ' + str(newMainPhase))
@@ -98,12 +102,13 @@ class GameSession:
         self.phrasesInHat = list(self.allPhrases) # shallow copy
 
     def recordPlayerPhrases(self, playerID, phrases):
-        self.log(playerID + ' phrases: ' + phrases)
+        self.log(playerID + ' phrases: ' + str(phrases))
+
         player = self.playersByID[playerID]
         if len(player.phrases) > 0:
-            raise Exception(playerID + ' has already recorded phrases')
+            raise GameError(playerID + ' has already recorded phrases')
         if len(phrases) != self.phrasesPerPlayer:
-            raise Exception('invalid number of phrases recorded')
+            raise GameError('invalid number of phrases recorded')
         for phrase in phrases:
             player.phrases.append(phrase)
             self.allPhrases.append(phrase)
@@ -121,9 +126,10 @@ class GameSession:
 
     def startPlayerTurn(self, playerID):
         self.log(playerID + ' turn starting')
-        activePlayer = assertActivePlayer(playerID)
-        assertMainPhase([GameMainPhase.MultiWord, GameMainPhase.SingleWord, GameMainPhase.Charade])
-        assertSubPhase(GameSubPhase.WaitForStart)
+
+        activePlayer = self.assertActivePlayer(playerID)
+        self.assertMainPhase([GameMainPhase.MultiWord, GameMainPhase.SingleWord, GameMainPhase.Charade])
+        self.assertSubPhase(GameSubPhase.WaitForStart)
         
         self.subPhase = GameSubPhase.Started
         self.turnStartTime = datetime.now()
@@ -134,34 +140,33 @@ class GameSession:
 
     def timeoutPlayerTurn(self, playerID):
         self.log(playerID + ' turn time complete')
-        activePlayer = confirmActivePlayer(playerID)
-        assertMainPhase([GameMainPhase.MultiWord, GameMainPhase.SingleWord, GameMainPhase.Charade])
-        assertSubPhase(GameSubPhase.Started)
+
+        activePlayer = self.assertActivePlayer(playerID)
+        self.assertMainPhase([GameMainPhase.MultiWord, GameMainPhase.SingleWord, GameMainPhase.Charade])
+        self.assertSubPhase(GameSubPhase.Started)
         
         #self.turnTimeTaken = min((datetime.now() - self.turnStartTime).total_seconds(), self.secondsPerTurn)
-        GameSubPhase = GameSubPhase.ConfirmingPhrases
+        self.subPhase = GameSubPhase.ConfirmingPhrases
 
     def assignTurnPhrases(self, playerID, acceptedPhrases):
         self.log(playerID + ' assigning phrases')
-        self.log('accepted: ' + acceptedPhrases)
+        self.log('accepted: ' + str(acceptedPhrases))
 
-        activePlayer = confirmActivePlayer(playerID)
+        activePlayer = self.assertActivePlayer(playerID)
+        self.assertMainPhase([GameMainPhase.MultiWord, GameMainPhase.SingleWord, GameMainPhase.Charade])
+        self.assertSubPhase(GameSubPhase.ConfirmingPhrases)
         
-        for activePhrase in self.activePhrases:
-            if activePhrase in acceptedPhrases:
-                # remove phrase from hat, give score to corresponding team
-                if activePhrase in self.phrasesInHat:
-                    self.phrasesInHat.remove(activePhrase)
-                    self.teams[activePlayer.teamIdx].score += 1
-                else:
-                    raise Exception('phrase not in hat: ' + str(activePhrase))
-            elif activePhrase in rejectedPhrases:
-                # nothing to do here, leave phrase in hat
-                continue
+        for phrase in acceptedPhrases:
+            if phrase in self.phrasesInHat:
+                self.phrasesInHat.remove(phrase)
+                self.teams[activePlayer.teamIdx].score += 1
             else:
-                raise Exception('phrase not in accepted or rejected phrases: ' + str(activePhrase))
+                raise GameError('phrase not in hat: ' + phrase)
+            
+        self.activePlayerIdx = (self.activePlayerIdx + 1) % len(self.players)
+        self.subPhase = GameSubPhase.WaitForStart
 
-        if self.phrasesInHat == 0:
+        if len(self.phrasesInHat) == 0:
             if self.mainPhase == GameMainPhase.MultiWord:
                 self.newMainPhase(GameMainPhase.SingleWord)
             elif self.mainPhase == GameMainPhase.SingleWord:
@@ -179,12 +184,59 @@ if __name__ == "__main__":
     phrasesPerPlayer = 6
 
     game = GameSession('test game', playerNames, phrasesPerPlayer, 30)
+
+    print('adding random phrases')
     for x in range(0, 10000):
         playerID = random.choice(playerNames)
+        #playerID = game.players[x].id
         playerPhrases = []
         for y in range(0, phrasesPerPlayer):
             playerPhrases.append(random.choice(randomPhrases) + " " + random.choice(randomPhrases))
-        game.recordPlayerPhrases(playerID, playerPhrases)
+
+        try:
+            game.recordPlayerPhrases(playerID, playerPhrases)
+        except GameError as err:
+            print('recording failed', err)
+
         if game.mainPhase == GameMainPhase.MultiWord:
-            continue
+            break
+
+    def runGamePhase(newPhase):
+        for x in range(0, 10000):
+            playerID = random.choice(playerNames)
+            #playerID = game.players[game.activePlayerIdx].id
+
+            try:
+                game.startPlayerTurn(playerID)
+            except GameError as err:
+                print('starting failed', err)
+
+            try:
+                game.timeoutPlayerTurn(playerID)
+            except GameError as err:
+                print('timeout failed', err)
+
+            successfulWordCount = min(len(game.phrasesInHat), random.randint(0, 5))
+            randomSuccessfulPhrases = random.sample(game.phrasesInHat, successfulWordCount)
+
+            try:
+                game.assignTurnPhrases(playerID, randomSuccessfulPhrases)
+            except GameError as err:
+                print('assigning phrases failed', err)
+
+            if game.mainPhase == newPhase:
+                break
+        print('phase: ', game.mainPhase)
+        print('team A score: ', game.teams[0].score)
+        print('team B score: ', game.teams[1].score)
+
+
+    print('starting multiword phase')
+    runGamePhase(GameMainPhase.SingleWord)
+    
+    print('starting singleword phase')
+    runGamePhase(GameMainPhase.Charade)
+
+    print('starting charade phase')
+    runGamePhase(GameMainPhase.Done)
 
