@@ -47,6 +47,9 @@ class GameSession:
         self.phrasesPerPlayer = phrasesPerPlayer
         self.secondsPerTurn = secondsPerTurn
 
+        if len(playerIDs) < 4 or len(playerIDs) > 10:
+            raise GameError('must have between 4 and 10 players: ' + playerIDs) 
+
         self.players = []
         self.playersByID = {}
         self.teams = []
@@ -104,11 +107,15 @@ class GameSession:
     def recordPlayerPhrases(self, playerID, phrases):
         self.log(playerID + ' phrases: ' + str(phrases))
 
+        if playerID not in self.playersByID:
+            print('playersByID:', self.playersByID.keys())
+            raise GameError(playerID + ' is not a valid player')
+
         player = self.playersByID[playerID]
         if len(player.phrases) > 0:
             raise GameError(playerID + ' has already recorded phrases')
         if len(phrases) != self.phrasesPerPlayer:
-            raise GameError('invalid number of phrases recorded')
+            raise GameError('invalid number of phrases recorded: ' + str(len(phrases)))
         for phrase in phrases:
             player.phrases.append(phrase)
             self.allPhrases.append(phrase)
