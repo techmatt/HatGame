@@ -66,7 +66,7 @@ class GameSession:
         #
         self.phrasesInHat = None
         self.turnStartTime = None
-        self.activePlayerIdx = None
+        self.activePlayerIdx = -1
     
     def getStateDict(self):
         result = {}
@@ -79,6 +79,8 @@ class GameSession:
         result['hat'] = self.phrasesInHat
         result['mainPhase'] = str(self.mainPhase)
         result['subPhase'] = str(self.subPhase)
+        result['activePlayerIdx'] = self.activePlayerIdx
+        result['scores'] = [self.teams[0].score, self.teams[1].score]
         return result
 
     def log(self, text):
@@ -154,7 +156,7 @@ class GameSession:
         #for idx in range(0, min(self.phrasesPerTurn, len(self.phrasesInHat))):
         #    self.activePhrases.append(self.phrasesInHat[idx])
 
-    def timeoutPlayerTurn(self, playerID):
+    def endPlayerTurn(self, playerID):
         self.log(playerID + ' turn time complete')
 
         activePlayer = self.assertActivePlayer(playerID)
@@ -164,7 +166,7 @@ class GameSession:
         #self.turnTimeTaken = min((datetime.now() - self.turnStartTime).total_seconds(), self.secondsPerTurn)
         self.subPhase = GameSubPhase.ConfirmingPhrases
 
-    def assignTurnPhrases(self, playerID, acceptedPhrases):
+    def confirmPhrases(self, playerID, acceptedPhrases):
         self.log(playerID + ' assigning phrases')
         self.log('accepted: ' + str(acceptedPhrases))
 
@@ -228,15 +230,15 @@ if __name__ == "__main__":
                 print('starting failed', err)
 
             try:
-                game.timeoutPlayerTurn(playerID)
+                game.endPlayerTurn(playerID)
             except GameError as err:
-                print('timeout failed', err)
+                print('ending failed', err)
 
             successfulWordCount = min(len(game.phrasesInHat), random.randint(0, 5))
             randomSuccessfulPhrases = random.sample(game.phrasesInHat, successfulWordCount)
 
             try:
-                game.assignTurnPhrases(playerID, randomSuccessfulPhrases)
+                game.confirmPhrases(playerID, randomSuccessfulPhrases)
             except GameError as err:
                 print('assigning phrases failed', err)
 

@@ -73,7 +73,7 @@ def retrieveGameState():
 def startNewGame():
     # params:
     #  id: identifier for the game
-    #  players: list of player names, comma-separated
+    #  players: list of player names
     #  phrases: number of phrases per player
     #  time: number of seconds per turn
     
@@ -98,12 +98,11 @@ def startNewGame():
 @app.route('/games/<gameID>/<playerID>/recordphrases', methods=['POST'])
 def recordPhrases(gameID, playerID):
     # params:
-    #  phrases: comma-separated phrases to add. Should be exactly phrasesPerPlayer entries.
+    #  phrases: list of phrases to add. Should be exactly phrasesPerPlayer entries.
     
     try:
         game = activeGames[gameID]
     except KeyError as err:
-        print('game ID not found', gameID)
         return ErrorResponse(err)
 
     requestJSON = request.get_json()
@@ -116,6 +115,60 @@ def recordPhrases(gameID, playerID):
     try:
         game.recordPlayerPhrases(playerID, phrases)
     except GameError as err:
-        print('game error:', err)
+        return ErrorResponse(err)
+    return 'phrases recorded'
+
+@app.route('/games/<gameID>/<playerID>/startturn', methods=['POST'])
+def startTurn(gameID, playerID):
+    # params:
+    #  None
+    
+    try:
+        game = activeGames[gameID]
+    except KeyError as err:
+        return ErrorResponse(err)
+
+    try:
+        game.startPlayerTurn(playerID)
+    except GameError as err:
+        return ErrorResponse(err)
+    return 'turn started'
+
+@app.route('/games/<gameID>/<playerID>/endturn', methods=['POST'])
+def endTurn(gameID, playerID):
+    # params:
+    #  None
+    
+    try:
+        game = activeGames[gameID]
+    except KeyError as err:
+        return ErrorResponse(err)
+
+    try:
+        game.endPlayerTurn(playerID)
+    except GameError as err:
+        return ErrorResponse(err)
+    return 'turn ended'
+
+@app.route('/games/<gameID>/<playerID>/confirmphrases', methods=['POST'])
+def confirmPhrases(gameID, playerID):
+    # params:
+    #  acceptedPhrases: comma-separated phrases to confirm as 'accepted'.
+    
+    try:
+        game = activeGames[gameID]
+    except KeyError as err:
+        return ErrorResponse(err)
+
+    requestJSON = request.get_json()
+    print('requestJSON:', requestJSON)
+    try:
+        acceptedPhrases = getParam(requestJSON, 'acceptedPhrases', isList=True)
+    except ParamError as err:
+        return ErrorResponse(err)
+
+    try:
+        game.confirmPhrases(playerID, acceptedPhrases)
+    except GameError as err:
         return ErrorResponse(err)
     return 'phrases recorded'

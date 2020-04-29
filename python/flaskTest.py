@@ -8,6 +8,7 @@ session = requests.session()
 URLBase = 'http://127.0.0.1:5000/'
 randomPhrases = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', \
                  'September', 'October', 'November', 'December']
+runInvalidTests = False
 
 def makeRandomPhraseDict(phraseCount):
     phrases = []
@@ -64,12 +65,11 @@ def testGameCreation():
         processPostRequest(URLBase + 'newgame', json=gameDict)
 
         # test creating the same game twice
-        if x == 0:
+        if runInvalidTests and x == 0:
             processPostRequest(URLBase + 'newgame', json=gameDict)
     
     # verify each created game is on the server
     gameList = processGetRequest(URLBase + 'gamelist')['games']
-    print(gameList)
     for name in gameNames:
         assert(name in gameList)
     print('game creation test passed')
@@ -107,46 +107,71 @@ def createValidPhrases(gameID):
         processPostRequest(gameURLBase + players[playerIdx] + '/recordphrases', json=makeRandomPhraseDict(phrasesPerPlayer))
 
         # test double-adding phrases
-        if playerIdx == 0:
+        if runInvalidTests and playerIdx == 0:
             processPostRequest(gameURLBase + players[playerIdx] + '/recordphrases', json=makeRandomPhraseDict(phrasesPerPlayer))
     print('valid phrases created')
 
 def verifyPhase(gameID, targetMainPhase, targetSubPhase):
     gameState = processGetRequest(URLBase + 'gamestate', json={'id' : gameID})
     #print('gameState:', gameState)
-    if gameState['mainPhase'] != targetMainPhase:
+    if targetMainPhase != None and gameState['mainPhase'] != targetMainPhase:
         print('unexpected main phase:', gameState['mainPhase'], targetMainPhase)
     if gameState['subPhase'] != targetSubPhase:
         print('unexpected subphase:', gameState['subPhase'], targetSubPhase)
 
-def simulateRound(gameID):
+def printScores(gameID):
+    gameState = processGetRequest(URLBase + 'gamestate', json={'id' : gameID})
+    print('team scores:', gameState['scores'][0], gameState['scores'][1])
+
+def simulateValidPlayerTurn(gameID):
     gameState = processGetRequest(URLBase + 'gamestate', json={'id' : gameID})
     gameURLBase = URLBase + 'games/' + gameID + '/'
     players = gameState['players']
-    phrasesPerPlayer = gameState['phrasesPerPlayer']
+    hat = gameState['hat']
+    activePlayerIdx = gameState['activePlayerIdx']
 
-    for playerIdx in range(0, len(players)):
-        processPostRequest(gameURLBase + players[playerIdx] + '/recordphrases', json=makeRandomPhraseDict(phrasesPerPlayer))
+    verifyPhase(newGameID, None, 'GameSubPhase.WaitForStart')
+    processPostRequest(gameURLBase + players[activePlayerIdx] + '/startturn', json=None)
+    verifyPhase(newGameID, None, 'GameSubPhase.Started')
+    processPostRequest(gameURLBase + players[activePlayerIdx] + '/endturn', json=None)
+    verifyPhase(newGameID, None, 'GameSubPhase.ConfirmingPhrases')
 
-        # test double-adding phrases
-        if playerIdx == 0:
-            processPostRequest(gameURLBase + players[playerIdx] + '/recordphrases', json=makeRandomPhraseDict(phrasesPerPlayer))
-    print('valid phrases created')
+    successfulWordCount = min(len(hat), random.randint(0, 5))
+    randomAcceptedPhrases = random.sample(hat, successfulWordCount)
+    acceptedJson = {'acceptedPhrases' : randomAcceptedPhrases}
+    processPostRequest(gameURLBase + players[activePlayerIdx] + '/confirmphrases', json=acceptedJson)
+    verifyPhase(newGameID, None, 'GameSubPhase.WaitForStart')
+    return processGetRequest(URLBase + 'gamestate', json={'id' : gameID})['mainPhase']
 
 newGameList = testGameCreation()
 newGameID = newGameList[0]
 
-testInvalidCalls(newGameID)
+if runInvalidTests:
+    testInvalidCalls(newGameID)
 
 verifyPhase(newGameID, 'GameMainPhase.Write', 'GameSubPhase.Invalid')
 createValidPhrases(newGameID)
 verifyPhase(newGameID, 'GameMainPhase.MultiWord', 'GameSubPhase.WaitForStart')
-simulateRound(newGameID)
-#verifyPhase()
 
-# create random valid phrases for each player
-#for player in players:
-#   requests.post(gameURLBase + player + '/recordphrases', data=makeRandomPhraseDict(phrasesPerPlayer))
+print('running single word round')
+for x in range(0, 1000):
+    newMainPhase = simulateValidPlayerTurn(newGameID)
+    if newMainPhase == 'GameMainPhase.SingleWord':
+        break
 
-# invalid API calls
-#requests.post(gameURLBase + players[2] + '/recordphrases', data=makeRandomPhraseDict(phrasesPerPlayer))
+printScores(newGameID)
+print('running multi word round')
+for x in range(0, 1000):
+    newMainPhase = simulateValidPlayerTurn(newGameID)
+    if newMainPhase == 'GameMainPhase.Charade':
+        break
+
+printScores(newGameID)
+print('running charade round')
+for x in range(0, 1000):
+    newMainPhase = simulateValidPlayerTurn(newGameID)
+    if newMainPhase == 'GameMainPhase.Charade':
+        break
+
+printScores(newGameID)
+print('done')
