@@ -28,10 +28,6 @@ class Player:
         self.teamIdx = teamIdx
         self.phrases = []
 
-class Phrase:
-    def __init__(self, text):
-        self.text = text
-
 class Team:
     def __init__(self, idx):
         self.idx = idx
@@ -72,6 +68,19 @@ class GameSession:
         self.turnStartTime = None
         self.activePlayerIdx = None
     
+    def getStateDict(self):
+        result = {}
+        playerList = []
+        for x in self.players:
+            playerList.append(x.id)
+        result['phrasesPerPlayer'] = self.phrasesPerPlayer
+        result['secondsPerTurn'] = self.secondsPerTurn
+        result['players'] = playerList #list(map(lambda x: x.id, self.players))
+        result['hat'] = self.phrasesInHat
+        result['mainPhase'] = str(self.mainPhase)
+        result['subPhase'] = str(self.subPhase)
+        return result
+
     def log(self, text):
         if self.showLog:
             print(text)

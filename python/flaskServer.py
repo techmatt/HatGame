@@ -1,6 +1,6 @@
-from flask import Flask
-from flask import request
+from flask import Flask, request, Response
 from werkzeug.exceptions import BadRequestKeyError
+from collections import Iterable
 from markupsafe import escape
 
 from gameSession import GameSession, GameError
@@ -9,6 +9,9 @@ app = Flask(__name__)
 
 class ParamError(Exception):
     pass
+
+def ErrorResponse(obj):
+    return Response(str(obj), status=400, mimetype='application/text')
 
 activeGames = {}
 
@@ -20,24 +23,51 @@ def helloWorld():
 #def show_user_profile(command):
 #    # show the user profile for that user
 #    return 'User %s' % escape(username)
+#https://www.w3schools.com/python/ref_requests_response.asp
 
-def getParam(form, param, isList=False, isInt=False):
+def getParam(requestJSON, param, isList=False, isInt=False):
     try:
-        result = request.form[param]
+        result = requestJSON[param]
     except BadRequestKeyError as err:
-        print('param not found:', param)
-        raise ParamError('param not found')
+        #print('param not found:', param)
+        raise ParamError('param not found: ' + param)
+    except TypeError as err:
+        #print('param exception:', str(e))
+        #print('param exception:', type(e).__name__)
+        raise ParamError('parameters not JSON')
 
     if isList:
-        result = result.split(',')
-        if len(result) <= 1:
-            print('not a valid list:', result)
-            raise ParamError('not a valid list')
+        if not isinstance(result, Iterable):
+            raise ParamError('list is not iterable')
+        #result = result.split(',')
+        #if len(result) <= 1:
+        #    print('not a valid list:', result)
+        #    raise ParamError('not a valid list')
 
     if isInt:
         result = int(result)
 
     return result
+
+@app.route('/gamelist', methods=['GET'])
+def retrieveGameList():
+    return {'games' : list(activeGames.keys())}
+
+@app.route('/gamestate', methods=['GET'])
+def retrieveGameState():
+    requestJSON = request.get_json()
+    try:
+        gameID = getParam(requestJSON, 'id')
+    except ParamError as err:
+        return ErrorResponse(err)
+
+    try:
+        game = activeGames[gameID]
+    except KeyError as err:
+        return ErrorResponse(err)
+
+    return game.getStateDict()
+
 
 @app.route('/newgame', methods=['POST'])
 def startNewGame():
@@ -46,49 +76,46 @@ def startNewGame():
     #  players: list of player names, comma-separated
     #  phrases: number of phrases per player
     #  time: number of seconds per turn
-    error = None
     
+    requestJSON = request.get_json()
     try:
-        id = getParam(request.form, 'id')
-        playerIDs = getParam(request.form, 'players', isList=True)
-        phrasesPerPlayer = getParam(request.form, 'phrases', isInt=True)
-        secondsPerTurn = getParam(request.form, 'time', isInt=True)
-    except ParamError:
-        error = 'bad key'
-        return error
+        id = getParam(requestJSON, 'id')
+        playerIDs = getParam(requestJSON, 'players', isList=True)
+        phrasesPerPlayer = getParam(requestJSON, 'phrases', isInt=True)
+        secondsPerTurn = getParam(requestJSON, 'time', isInt=True)
+    except ParamError as err:
+        return ErrorResponse(err)
 
     if id in activeGames:
         print('game ID already exists:', id)
-        error = 'game ID already exists'
-        return error
+        return ErrorResponse('game ID already exists: ' + id)
 
+    print('new game players:', playerIDs)
     newSession = GameSession(id, playerIDs, phrasesPerPlayer, secondsPerTurn)
     activeGames[id] = newSession
-
-    return 'New game!'
+    return 'game created'
 
 @app.route('/games/<gameID>/<playerID>/recordphrases', methods=['POST'])
 def recordPhrases(gameID, playerID):
     # params:
     #  phrases: comma-separated phrases to add. Should be exactly phrasesPerPlayer entries.
-    error = None
     
     try:
         game = activeGames[gameID]
-    except KeyError as error:
+    except KeyError as err:
         print('game ID not found', gameID)
-        error = 'game-not-found'
-        return error
+        return ErrorResponse(err)
 
+    requestJSON = request.get_json()
+    print('requestJSON:', requestJSON)
     try:
-        phrases = getParam(request.form, 'phrases', isList=True)
-    except ParamError:
-        error = 'bad key'
-        return error
+        phrases = getParam(requestJSON, 'phrases', isList=True)
+    except ParamError as err:
+        return ErrorResponse(err)
 
     try:
         game.recordPlayerPhrases(playerID, phrases)
     except GameError as err:
         print('game error:', err)
-        error = 'game-error'
-        return error
+        return ErrorResponse(err)
+    return 'phrases recorded'
