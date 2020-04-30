@@ -8,7 +8,7 @@ session = requests.session()
 URLBase = 'http://127.0.0.1:5000/'
 randomPhrases = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', \
                  'September', 'October', 'November', 'December']
-runInvalidTests = False
+runInvalidTests = True
 
 def makeRandomPhraseDict(phraseCount):
     phrases = []
@@ -148,6 +148,33 @@ def simulateValidPlayerTurn(gameID):
     verifyPhase(newGameID, None, 'GameSubPhase.WaitForStart')
     return processGetRequest(URLBase + 'gamestate', json={'id' : gameID})['mainPhase']
 
+def simulateInvalidPlayerTurn(gameID):
+    gameState = processGetRequest(URLBase + 'gamestate', json={'id' : gameID})
+    gameURLBase = URLBase + 'games/' + gameID + '/'
+    players = gameState['players']
+    hat = gameState['hat']
+    activePlayerIdx = gameState['activePlayerIdx']
+
+    verifyPhase(newGameID, None, 'GameSubPhase.WaitForStart')
+
+    activePlayerPrefix   = gameURLBase + players[activePlayerIdx]
+    inactivePlayerPrefix = gameURLBase + players[(activePlayerIdx + 1) % len(players)]
+    # take actions as the wrong player
+    processPostRequest(inactivePlayerPrefix + '/startturn', json=None)
+    processPostRequest(inactivePlayerPrefix + '/endturn', json=None)
+
+    # try to end turn before it has begun
+    processPostRequest(gameURLBase + players[activePlayerIdx] + '/endturn', json=None)
+
+    # try to confirm phrases too early
+    successfulWordCount = min(len(hat), random.randint(0, 5))
+    randomAcceptedPhrases = random.sample(hat, successfulWordCount)
+    acceptedJson = {'acceptedPhrases' : randomAcceptedPhrases}
+    processPostRequest(inactivePlayerPrefix + '/confirmphrases', json=acceptedJson)
+    processPostRequest(activePlayerPrefix   + '/confirmphrases', json=acceptedJson)
+
+    verifyPhase(newGameID, None, 'GameSubPhase.WaitForStart')
+
 newGameList = testGameCreation()
 newGameID = newGameList[0]
 
@@ -161,6 +188,10 @@ verifyPhase(newGameID, 'GameMainPhase.MultiWord', 'GameSubPhase.WaitForStart')
 print('running single word round')
 for x in range(0, 1000):
     newMainPhase = simulateValidPlayerTurn(newGameID)
+
+    if runInvalidTests:
+        simulateInvalidPlayerTurn(newGameID)
+
     if newMainPhase == 'GameMainPhase.SingleWord':
         break
 
