@@ -121,7 +121,12 @@ def verifyPhase(gameID, targetMainPhase, targetSubPhase):
 
 def printScores(gameID):
     gameState = processGetRequest(URLBase + 'gamestate', json={'id' : gameID})
-    print('team scores:', gameState['scores'][0], gameState['scores'][1])
+    scoreA = gameState['scores'][0]
+    scoreB = gameState['scores'][1]
+    total = scoreA + scoreB
+    perPlayer = total // len(gameState['players'])
+    #assert(perPlayer == gameState['phrasesPerPlayer'])
+    print('team scores:', scoreA, scoreB, total, perPlayer)
 
 def simulateValidPlayerTurn(gameID):
     gameState = processGetRequest(URLBase + 'gamestate', json={'id' : gameID})
@@ -170,7 +175,7 @@ printScores(newGameID)
 print('running charade round')
 for x in range(0, 1000):
     newMainPhase = simulateValidPlayerTurn(newGameID)
-    if newMainPhase == 'GameMainPhase.Charade':
+    if newMainPhase == 'GameMainPhase.Done':
         break
 
 printScores(newGameID)
