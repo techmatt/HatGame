@@ -1,4 +1,4 @@
-from flask import Flask, request, Response
+from flask import Flask, request, Response, send_from_directory
 from werkzeug.exceptions import BadRequestKeyError
 from collections import Iterable
 from markupsafe import escape
@@ -16,8 +16,13 @@ def ErrorResponse(obj):
 activeGames = {}
 
 @app.route('/')
-def helloWorld():
-    return 'Hello, World!'
+def homePage():
+	try:
+		return send_from_directory('../html/', 'index.html', as_attachment=False)
+	except Exception as e:
+		print('failed:', e)
+		return 'Hello, World!'
+    #return 'Hello, World!'
 
 #@app.route('/newGame<command>')
 #def show_user_profile(command):
