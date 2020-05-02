@@ -17,7 +17,7 @@ def ErrorResponse(obj):
 activeGames = {}
 
 @app.route('/')
-def homePage():
+def homePageURL():
 	return render_template("base.html", message="Hello Flask!")
 	try:
 		#return send_from_directory('template/', 'index.html', as_attachment=False)
@@ -26,6 +26,10 @@ def homePage():
 		print('failed:', str(err))
 		return ErrorResponse(err)
 
+@app.route('/new-game.html')
+def newGameURL():
+    return render_template("new-game.html", message="Hello Flask!")
+    
 #@app.route('/newGame<command>')
 #def show_user_profile(command):
 #    # show the user profile for that user
