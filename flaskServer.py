@@ -1,9 +1,10 @@
-from flask import Flask, request, Response, send_from_directory
+
+from flask import Flask, request, Response, send_from_directory, render_template
 from werkzeug.exceptions import BadRequestKeyError
 from collections import Iterable
 from markupsafe import escape
 
-from gameSession import GameSession, GameError
+from python.gameSession import GameSession, GameError
 
 app = Flask(__name__)
 
@@ -17,12 +18,13 @@ activeGames = {}
 
 @app.route('/')
 def homePage():
+	return render_template("base.html", message="Hello Flask!")
 	try:
-		return send_from_directory('../html/', 'index.html', as_attachment=False)
-	except Exception as e:
-		print('failed:', e)
-		return 'Hello, World!'
-    #return 'Hello, World!'
+		#return send_from_directory('template/', 'index.html', as_attachment=False)
+		return render_template("base.html", message="Hello Flask!")
+	except Exception as err:
+		print('failed:', str(err))
+		return ErrorResponse(err)
 
 #@app.route('/newGame<command>')
 #def show_user_profile(command):
