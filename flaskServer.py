@@ -1,5 +1,5 @@
 
-from flask import Flask, request, Response, send_from_directory, render_template
+from flask import Flask, request, Response, send_from_directory, render_template, jsonify
 from werkzeug.exceptions import BadRequestKeyError
 from collections import Iterable
 from markupsafe import escape
@@ -29,6 +29,10 @@ def homePageURL():
 @app.route('/new-game.html')
 def newGameURL():
     return render_template("new-game.html", message="Hello Flask!")
+
+@app.route('/gamelist')
+def gameListHTML():
+    return render_template("game_list.html")
     
 #@app.route('/newGame<command>')
 #def show_user_profile(command):
@@ -63,7 +67,7 @@ def getParam(requestJSON, param, isList=False, isInt=False, isString=False):
 
 @app.route('/api/gamelist', methods=['GET'])
 def retrieveGameList():
-    return {'games' : list(activeGames.keys())}
+    return jsonify({'games' : list(activeGames.keys())})
 
 @app.route('/api/gamestate', methods=['GET'])
 def retrieveGameState():
