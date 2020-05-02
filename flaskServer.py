@@ -56,11 +56,11 @@ def getParam(requestJSON, param, isList=False, isInt=False):
 
     return result
 
-@app.route('/gamelist', methods=['GET'])
+@app.route('/api/gamelist', methods=['GET'])
 def retrieveGameList():
     return {'games' : list(activeGames.keys())}
 
-@app.route('/gamestate', methods=['GET'])
+@app.route('/api/gamestate', methods=['GET'])
 def retrieveGameState():
     requestJSON = request.get_json()
     try:
@@ -76,7 +76,7 @@ def retrieveGameState():
     return game.getStateDict()
 
 
-@app.route('/newgame', methods=['POST'])
+@app.route('/api/newgame', methods=['POST'])
 def startNewGame():
     # params:
     #  id: identifier for the game
