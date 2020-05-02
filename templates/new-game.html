@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Hat Game - New Game</title>
+		<link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
+		<link rel="stylesheet" href="{{ url_for('static', filename='new-game.css') }}">
+	</head>
+	<body>
+		<section id="header">
+			<img id="logo" src="logo.jpg"></img>
+			<div id="playerList">
+				<div class="player-icon team-1 inactive">
+					<img src="player.jpg"/>
+				</div>
+				<div class="player-icon team-1 inactive">
+					<img src="player.jpg"/>
+				</div>
+				<div class="player-icon team-2 inactive">
+					<img src="player.jpg"/>
+				</div>
+				<div class="player-icon team-2 inactive">
+					<img src="player.jpg"/>
+				</div>
+			</div>
+		</section>
+		<section id="main">
+			<div id="addPlayers" class="flex-window">
+				<h1>Players</h1>
+				<div class="input-section">
+					<input class="name-text" type="text"></input>
+					<button class="remove inactive">x</button>
+				</div>
+				<button class="add">Add Player</button>
+			</div>
+			<div id="optionList" class="flex-window">
+				<h1>Options</h1>
+				<div class="input-section">
+					<span>Word Count</span><input id="wordCount" type="text" value="5"></input>
+				</div>
+				<div class="input-section">
+					<span>Turn Length (sec)</span><input id="turnLength" type="text" value="30"></input>
+				</div>
+			</div>
+		</section>
+		<section id="footer">
+			<div class="button start"><span>Start</span></div>
+		</section>
+	</body>
+</html>
