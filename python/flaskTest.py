@@ -29,7 +29,8 @@ def makeRandomGame():
         'id': randomString(),
         'players': allPlayers[0:playerCount],
         'phrases': random.randint(2, 10),
-        'time': random.randint(10, 60) }
+        'time': random.randint(10, 60),
+        'videoURL': 'vid' + randomString() }
     return gameDict
 
 def processRequest(URL, json, isPost):

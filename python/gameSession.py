@@ -34,7 +34,7 @@ class Team:
         self.score = 0
 
 class GameSession:
-    def __init__(self, id, playerIDs, phrasesPerPlayer, secondsPerTurn):
+    def __init__(self, id, playerIDs, phrasesPerPlayer, secondsPerTurn, videoURL):
         #self.id = uuid.uuid1().hex
         self.showLog = True
 
@@ -42,6 +42,7 @@ class GameSession:
         self.id = id
         self.phrasesPerPlayer = phrasesPerPlayer
         self.secondsPerTurn = secondsPerTurn
+        self.videoURL = videoURL
 
         if len(playerIDs) < 4 or len(playerIDs) > 10:
             raise GameError('must have between 4 and 10 players: ' + playerIDs) 
@@ -81,6 +82,7 @@ class GameSession:
         result['subPhase'] = str(self.subPhase)
         result['activePlayerIdx'] = self.activePlayerIdx
         result['scores'] = [self.teams[0].score, self.teams[1].score]
+        result['videoURL'] = str(self.videoURL)
         return result
 
     def log(self, text):

@@ -36,11 +36,12 @@ def gameListHTML():
 #    return 'User %s' % escape(username)
 #https://www.w3schools.com/python/ref_requests_response.asp
 
-def getParam(requestJSON, param, isList=False, isInt=False):
+def getParam(requestJSON, param, isList=False, isInt=False, isString=False):
     try:
         result = requestJSON[param]
     except BadRequestKeyError as err:
-        #print('param not found:', param)
+        raise ParamError('param not found: ' + param)
+    except KeyError as err:
         raise ParamError('param not found: ' + param)
     except TypeError as err:
         #print('param exception:', str(e))
@@ -87,6 +88,7 @@ def startNewGame():
     #  players: list of player names
     #  phrases: number of phrases per player
     #  time: number of seconds per turn
+    #  videourl: URL of the video chat
     
     requestJSON = request.get_json()
     try:
@@ -94,6 +96,7 @@ def startNewGame():
         playerIDs = getParam(requestJSON, 'players', isList=True)
         phrasesPerPlayer = getParam(requestJSON, 'phrases', isInt=True)
         secondsPerTurn = getParam(requestJSON, 'time', isInt=True)
+        videoURL = getParam(requestJSON, 'videoURL', isString=True)
     except ParamError as err:
         return ErrorResponse(err)
 
@@ -102,7 +105,7 @@ def startNewGame():
         return ErrorResponse('game ID already exists: ' + id)
 
     print('new game players:', playerIDs)
-    newSession = GameSession(id, playerIDs, phrasesPerPlayer, secondsPerTurn)
+    newSession = GameSession(id, playerIDs, phrasesPerPlayer, secondsPerTurn, videoURL)
     activeGames[id] = newSession
     return 'game created'
 
