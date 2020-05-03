@@ -82,7 +82,7 @@ def retrieveGameState():
     except KeyError as err:
         return ErrorResponse(err)
 
-    return game.getStateDict()
+    return jsonify(game.getStateDict())
 
 
 @app.route('/api/newgame', methods=['POST'])
@@ -111,7 +111,7 @@ def startNewGame():
     print('new game players:', playerIDs)
     newSession = GameSession(id, playerIDs, phrasesPerPlayer, secondsPerTurn, videoURL)
     activeGames[id] = newSession
-    return 'game created'
+    return jsonify({'gameURL' : '/games/' + id + '/'})
 
 @app.route('/games/<gameID>/<playerID>/recordphrases', methods=['POST'])
 def recordPhrases(gameID, playerID):

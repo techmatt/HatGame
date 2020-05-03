@@ -75,11 +75,11 @@ class GameSession:
         for x in self.players:
             playerList.append(x.id)
 
-        timeRemaining = -1.0
+        secondsRemaining = -1.0
         if self.turnStartTime is not None:
             elapsedSeconds = (datetime.now() - self.turnStartTime).total_seconds()
-            timeRemaining = max(0.0, self.secondsPerTurn - elapsedSeconds)
-        result['timeRemaining'] = timeRemaining
+            secondsRemaining = max(0.0, self.secondsPerTurn - elapsedSeconds)
+        result['secondsRemaining'] = secondsRemaining
 
         result['phrasesPerPlayer'] = self.phrasesPerPlayer
         result['secondsPerTurn'] = self.secondsPerTurn
