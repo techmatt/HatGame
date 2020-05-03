@@ -1,4 +1,6 @@
 
+import traceback
+import sys
 from flask import Flask, request, Response, send_from_directory, render_template, jsonify
 from werkzeug.exceptions import BadRequestKeyError
 from collections import Iterable
@@ -94,7 +96,11 @@ def startNewGame():
     #  time: number of seconds per turn
     #  videourl: URL of the video chat
     
-    requestJSON = request.get_json()
+    try:
+        requestJSON = request.get_json()
+    except Exception as ex:
+        traceback.print_exc(file=sys.stdout)
+
     print("called startNewGame()")
     print("json", requestJSON)
     print("data", request.data)
