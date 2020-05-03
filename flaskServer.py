@@ -98,8 +98,8 @@ def startNewGame():
     try:
         id = getParam(requestJSON, 'id')
         playerIDs = getParam(requestJSON, 'players', isList=True)
-        phrasesPerPlayer = getParam(requestJSON, 'phrases', isInt=True)
-        secondsPerTurn = getParam(requestJSON, 'time', isInt=True)
+        phrasesPerPlayer = getParam(requestJSON, 'phrasesPerPlayer', isInt=True)
+        secondsPerTurn = getParam(requestJSON, 'secondsPerTurn', isInt=True)
         videoURL = getParam(requestJSON, 'videoURL', isString=True)
     except ParamError as err:
         return ErrorResponse(err)

@@ -28,8 +28,8 @@ def makeRandomGame():
     gameDict = {
         'id': randomString(),
         'players': allPlayers[0:playerCount],
-        'phrases': random.randint(2, 10),
-        'time': random.randint(10, 60),
+        'phrasesPerPlayer': random.randint(2, 10),
+        'secondsPerTurn': random.randint(10, 60),
         'videoURL': 'vid' + randomString() }
     return gameDict
 
@@ -205,6 +205,8 @@ printScores(newGameID)
 print('running charade round')
 for x in range(0, 1000):
     newMainPhase = simulateValidPlayerTurn(newGameID)
+    if x == 3:
+        print(processGetRequest(URLBase + 'api/gamestate', json={'id' : newGameID}))
     if newMainPhase == 'GameMainPhase.Done':
         break
 
