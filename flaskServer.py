@@ -1,7 +1,7 @@
 
 import traceback
 import sys
-from flask import Flask, request, Response, send_from_directory, render_template, jsonify
+from flask import Flask, request, Response, send_from_directory, render_template, jsonify, json
 from werkzeug.exceptions import BadRequestKeyError
 from collections import Iterable
 from markupsafe import escape
@@ -101,10 +101,6 @@ def startNewGame():
     except Exception as ex:
         traceback.print_exc(file=sys.stdout)
 
-    print("called startNewGame()")
-    print("json", requestJSON)
-    print("data", request.data)
-    print("form", request.form)
     try:
         id = getParam(requestJSON, 'id')
         playerIDs = getParam(requestJSON, 'players', isList=True)
@@ -112,6 +108,7 @@ def startNewGame():
         secondsPerTurn = getParam(requestJSON, 'secondsPerTurn', isInt=True)
         videoURL = getParam(requestJSON, 'videoURL', isString=True)
     except ParamError as err:
+        traceback.print_exc(file=sys.stdout)
         return ErrorResponse(err)
 
     if id in activeGames:

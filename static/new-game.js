@@ -32,7 +32,7 @@
 			players: playerArray,
 			phrasesPerPlayer: document.querySelector("#wordCount").value,
 			secondsPerTurn: document.querySelector("#turnLength").value,
-			videoUrl: document.querySelector("#videoUrl").value
+			videoURL: document.querySelector("#videoUrl").value
 		}
 		return gameDict;
 	}
@@ -46,14 +46,14 @@
 			$.ajax({
 				type: "POST",
 				url: endpoint,
-				data: gameDict,
+				data: JSON.stringify(gameDict),
 				contentType: "application/json; charset=utf-8",
 				dataType: "json",
 				success: function(response) {
 					if(response.error) {
 						alert(response.error);
 					} else {
-						window.location = response.url;
+						window.location = response.gameURL;
 					}
 				},
 				failure: function(xhr, status, error) {
