@@ -30,20 +30,41 @@
 					<input class="name-text" type="text"></input>
 					<button class="remove inactive">x</button>
 				</div>
+				<div class="input-section">
+					<input class="name-text" type="text"></input>
+					<button class="remove inactive">x</button>
+				</div>
+				<div class="input-section">
+					<input class="name-text" type="text"></input>
+					<button class="remove inactive">x</button>
+				</div>
+				<div class="input-section">
+					<input class="name-text" type="text"></input>
+					<button class="remove inactive">x</button>
+				</div>
 				<button class="add">Add Player</button>
 			</div>
 			<div id="optionList" class="flex-window">
 				<h1>Options</h1>
+				<div class="input-section">
+					<span>Game ID</span><input id="gameId" type="text"></input>
+				</div>
 				<div class="input-section">
 					<span>Word Count</span><input id="wordCount" type="text" value="5"></input>
 				</div>
 				<div class="input-section">
 					<span>Turn Length (sec)</span><input id="turnLength" type="text" value="30"></input>
 				</div>
+				<div class="input-section">
+					<span>Video URL</span><input id="videoUrl" type="text" placeholder="https://someurl.com"></input>
+				</div>
 			</div>
 		</section>
 		<section id="footer">
 			<div class="button start"><span>Start</span></div>
 		</section>
+		<!-- load javascript -->
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+		<script type="text/javascript" src="{{ url_for('static', filename='new-game.js') }}"></script>
 	</body>
 </html>
