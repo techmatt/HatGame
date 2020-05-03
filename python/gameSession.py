@@ -74,6 +74,13 @@ class GameSession:
         playerList = []
         for x in self.players:
             playerList.append(x.id)
+
+        timeRemaining = -1.0
+        if self.turnStartTime is not None:
+            elapsedSeconds = (datetime.now() - self.turnStartTime).total_seconds()
+            timeRemaining = max(0.0, self.secondsPerTurn - elapsedSeconds)
+        result['timeRemaining'] = timeRemaining
+
         result['phrasesPerPlayer'] = self.phrasesPerPlayer
         result['secondsPerTurn'] = self.secondsPerTurn
         result['players'] = playerList #list(map(lambda x: x.id, self.players))
@@ -160,6 +167,7 @@ class GameSession:
 
     def endPlayerTurn(self, playerID):
         self.log(playerID + ' turn time complete')
+        self.turnStartTime = None
 
         activePlayer = self.assertActivePlayer(playerID)
         self.assertMainPhase([GameMainPhase.MultiWord, GameMainPhase.SingleWord, GameMainPhase.Charade])

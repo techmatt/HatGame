@@ -137,6 +137,9 @@ def simulateValidPlayerTurn(gameID):
     verifyPhase(newGameID, None, 'GameSubPhase.WaitForStart')
     processPostRequest(gameURLBase + players[activePlayerIdx] + '/startturn', json=None)
     verifyPhase(newGameID, None, 'GameSubPhase.Started')
+
+    #print(processGetRequest(URLBase + 'api/gamestate', json={'id' : gameID}))
+    
     processPostRequest(gameURLBase + players[activePlayerIdx] + '/endturn', json=None)
     verifyPhase(newGameID, None, 'GameSubPhase.ConfirmingPhrases')
 
@@ -205,8 +208,6 @@ printScores(newGameID)
 print('running charade round')
 for x in range(0, 1000):
     newMainPhase = simulateValidPlayerTurn(newGameID)
-    if x == 3:
-        print(processGetRequest(URLBase + 'api/gamestate', json={'id' : newGameID}))
     if newMainPhase == 'GameMainPhase.Done':
         break
 
