@@ -95,6 +95,10 @@ def startNewGame():
     #  videourl: URL of the video chat
     
     requestJSON = request.get_json()
+    print("called startNewGame()")
+    print("json", requestJSON)
+    print("data", request.data)
+    print("form", request.form)
     try:
         id = getParam(requestJSON, 'id')
         playerIDs = getParam(requestJSON, 'players', isList=True)

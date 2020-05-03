@@ -43,15 +43,23 @@
 		if(gameDict.error) {
 			alert(gameDict.error);
 		} else {
-			$.post(endpoint, gameDict, function(response) {
-			if(response.error) {
-				alert(response.error);
-			} else {
-				window.location = response.url;
-			}
-			}).fail(function(xhr, status, error) {
-				alert("Could not connect with server. Please try again or contact support.");
-			});
+			$.ajax({
+				type: "POST",
+				url: endpoint,
+				data: gameDict,
+				contentType: "application/json; charset=utf-8",
+				dataType: "json",
+				success: function(response) {
+					if(response.error) {
+						alert(response.error);
+					} else {
+						window.location = response.url;
+					}
+				},
+				failure: function(xhr, status, error) {
+					alert("Could not connect with server. Please try again or contact support.");
+				}
+			});	
 		}
 	}
 	// event handlers
