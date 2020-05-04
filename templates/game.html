@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hat Game - Main</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='game.css') }}">
+  </head>
+  <body>
+	<section id="header">
+		<img id="logo" src="logo.jpg"></img>
+		<div id="playerList">
+			<div class="player-icon team-1 inactive">
+				<img src="player.jpg"/>
+			</div>
+			<div class="player-icon team-1 inactive">
+				<img src="player.jpg"/>
+			</div>
+			<div class="player-icon team-2 inactive">
+				<img src="player.jpg"/>
+			</div>
+			<div class="player-icon team-2 inactive">
+				<img src="player.jpg"/>
+			</div>
+		</div>
+	</section>
+	<section id="app">
+	</section>
+	<section id="footer">
+	</section>
+	<!-- load javascript -->
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='game.js') }}"></script>
+    <!-- Load React. -->
+    <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
+    <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+  </body>
+</html>
+

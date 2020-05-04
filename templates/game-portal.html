@@ -1,16 +1,42 @@
 <!DOCTYPE HTML>
 <html>
-	<head>
-		<title>Hat Game - Game Portal for {{ game_name }}</title>
-	</head>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hat Game - Portal</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='portal.css') }}">
+  </head>
 	<body>
-		<h1>Game Portal</h1>
-		<a href="{{ video_url }}">Video link</a></p>
-		<p>Each player should click on their corresponding link below:</p>
-		<ul id="playerlist">
-	    {% for item in playerlist %}
-	        <li><a href="{{ item.href }}">{{ item.caption }}</a></li>
-	    {% endfor %}
-	    </ul>
+		<section id="header">
+			<img id="logo" src="logo.jpg"></img>
+			<div id="playerList">
+				<div class="player-icon team-1 inactive">
+					<img src="player.jpg"/>
+				</div>
+				<div class="player-icon team-1 inactive">
+					<img src="player.jpg"/>
+				</div>
+				<div class="player-icon team-2 inactive">
+					<img src="player.jpg"/>
+				</div>
+				<div class="player-icon team-2 inactive">
+					<img src="player.jpg"/>
+				</div>
+			</div>
+		</section>
+		<section id="main">
+			<div class="flex-window">
+				<h1>Game Portal</h1>
+				<a href="{{ video_url }}"><button>Video link</button></a>
+				<p>Click your player name below to join the game</p>
+				<ul id="playerlist">
+				{% for item in playerlist %}
+					<li><a href="{{ item.href }}"><button>{{ item.caption }}</button></a></li>
+				{% endfor %}
+				</ul>
+			</div>
+		</section>
+		<section id="footer">
+		</section>
 	</body>
 </html>

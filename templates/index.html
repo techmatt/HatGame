@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hat Game - Index</title>
+	<link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+  </head>
+  <body>
+	<section id="header">
+		<img id="logo" src="logo.jpg"></img>
+		<div id="playerList">
+			<div class="player-icon team-1 inactive">
+				<img src="player.jpg"/>
+			</div>
+			<div class="player-icon team-1 inactive">
+				<img src="player.jpg"/>
+			</div>
+			<div class="player-icon team-2 inactive">
+				<img src="player.jpg"/>
+			</div>
+			<div class="player-icon team-2 inactive">
+				<img src="player.jpg"/>
+			</div>
+		</div>
+	</section>
+	<section id="main">
+		<div class="flex-window">
+			<a href="new-game.html">
+				<button>Start New Game</button>
+			</a>
+		</div>
+	</section>
+	<section id="footer">
+	</section>
+  </body>
+</html>
+

@@ -20,7 +20,7 @@ activeGames = {}
 
 @app.route('/')
 def homePageURL():
-	return render_template("homepage.html")
+	return render_template("index.html")
 
 @app.route('/new-game.html')
 def newGameURL():
@@ -28,7 +28,7 @@ def newGameURL():
 
 @app.route('/gamelist')
 def gameListHTML():
-    return render_template("game_list.html")
+    return render_template("game-list.html")
 
 @app.route('/games/<gameID>/', methods=['GET'])
 def gamePortal(gameID):
