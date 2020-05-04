@@ -1,0 +1,16 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Hat Game - Game Portal for {{ game_name }}</title>
+	</head>
+	<body>
+		<h1>Game Portal</h1>
+		<a href="{{ video_url }}">Video link</a></p>
+		<p>Each player should click on their corresponding link below:</p>
+		<ul id="playerlist">
+	    {% for item in playerlist %}
+	        <li><a href="{{ item.href }}">{{ item.caption }}</a></li>
+	    {% endfor %}
+	    </ul>
+	</body>
+</html>

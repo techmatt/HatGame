@@ -35,7 +35,26 @@ def newGameURL():
 @app.route('/gamelist')
 def gameListHTML():
     return render_template("game_list.html")
+
+@app.route('/games/<gameID>/', methods=['GET'])
+def gamePortal(gameID):
+    # params:
+    #  gameID: ID of the game
     
+    try:
+        game = activeGames[gameID]
+    except KeyError as err:
+        return ErrorResponse(err)
+
+    playerList = []
+    for player in game.players:
+        d = {}
+        d['href'] = player.id + '/'
+        d['caption'] = player.id
+        playerList.append(d)
+    return render_template("game-portal.html", \
+                           game_name=gameID, playerlist=playerList, video_url=game.videoURL)
+
 #@app.route('/newGame<command>')
 #def show_user_profile(command):
 #    # show the user profile for that user
@@ -85,7 +104,6 @@ def retrieveGameState():
         return ErrorResponse(err)
 
     return jsonify(game.getStateDict())
-
 
 @app.route('/api/newgame', methods=['POST'])
 def startNewGame():
