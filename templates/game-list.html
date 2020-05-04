@@ -1,42 +1,15 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Hat Game - Game List</title>
-	<link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
-	<link rel="stylesheet" href="{{ url_for('static', filename='game-list.css') }}">
-	<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
-  </head>
+	{% with title="List", filename="list" %}
+		{% include 'head.html' %} 
+	{% endwith %}
   <body>
-	<section id="header">
-		<div id="title">
-			<img id="logo" src="{{ url_for('static', filename='logo.png') }}"></img>
-			<span>Hat Game</span>
-		</div>
-		<div id="playerList">
-			<div class="player-icon team-1 inactive">
-				<img src="player.jpg"/>
-			</div>
-			<div class="player-icon team-1 inactive">
-				<img src="player.jpg"/>
-			</div>
-			<div class="player-icon team-2 inactive">
-				<img src="player.jpg"/>
-			</div>
-			<div class="player-icon team-2 inactive">
-				<img src="player.jpg"/>
-			</div>
-		</div>
-	</section>
+	{% include 'header.html' %}
 	<section id="game_list_container">
 	</section>
 	<section id="footer">
 		<div class="button start"><span>Start</span></div>
 	</section>
-    <h2>Game List in React</h2>
-
-    <div id="game_list_container"></div>
-
     <!-- Load React. -->
     <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
     <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
@@ -44,6 +17,5 @@
 
     <!-- Load our React component. -->
     <script src="{{ url_for('static', filename='game-list.js') }}"></script>
-
   </body>
 </html>

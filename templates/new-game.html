@@ -1,32 +1,10 @@
 <!DOCTYPE HTML>
 <html>
-	<head>
-		<title>Hat Game - New Game</title>
-		<link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
-		<link rel="stylesheet" href="{{ url_for('static', filename='new-game.css') }}">
-		<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
-	</head>
+	{% with title="New Game", filename="new-game" %}
+		{% include 'head.html' %} 
+	{% endwith %}
 	<body>
-		<section id="header">
-			<div id="title">
-				<img id="logo" src="{{ url_for('static', filename='logo.png') }}"></img>
-				<span>Hat Game</span>
-			</div>
-			<div id="playerList">
-				<div class="player-icon team-1 inactive">
-					<img src="player.jpg"/>
-				</div>
-				<div class="player-icon team-1 inactive">
-					<img src="player.jpg"/>
-				</div>
-				<div class="player-icon team-2 inactive">
-					<img src="player.jpg"/>
-				</div>
-				<div class="player-icon team-2 inactive">
-					<img src="player.jpg"/>
-				</div>
-			</div>
-		</section>
+		{% include 'header.html' %}
 		<section id="main">
 			<div id="addPlayers" class="flex-window">
 				<h1>Players</h1>

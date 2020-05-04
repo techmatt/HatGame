@@ -1,33 +1,13 @@
 <!DOCTYPE HTML>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Hat Game - Index</title>
-	<link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
-	<link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
-	<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
-  </head>
+	{% with title="Index", filename="index" %}
+		{% include 'head.html' %} 
+	{% endwith %}
   <body>
-	<section id="header">
-		<img id="logo" src="{{ url_for('static', filename='logo.png') }}"></img>
-		<div id="playerList">
-			<div class="player-icon team-1 inactive">
-				<img src="player.jpg"/>
-			</div>
-			<div class="player-icon team-1 inactive">
-				<img src="player.jpg"/>
-			</div>
-			<div class="player-icon team-2 inactive">
-				<img src="player.jpg"/>
-			</div>
-			<div class="player-icon team-2 inactive">
-				<img src="player.jpg"/>
-			</div>
-		</div>
-	</section>
+	{% include 'header.html' %}
 	<section id="main">
 		<div class="flex-window">
-			<a href="new-game.html">
+			<a href="/new-game.html">
 				<button>Start New Game</button>
 			</a>
 		</div>
