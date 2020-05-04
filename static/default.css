@@ -18,6 +18,10 @@ body {
     border-top-right-radius: .3em;
     border-top-left-radius: .3em;
 }
+img#logo { 
+	width: 100px;
+	height: 100px;
+}
 #playerList {
     display: flex;
 }
