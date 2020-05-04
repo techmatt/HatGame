@@ -49,6 +49,10 @@ def gamePortal(gameID):
     return render_template("game-portal.html", \
                            game_name=gameID, playerlist=playerList, video_url=game.videoURL)
 
+@app.route('/games/<gameId>/<playerId>', methods=['GET'])
+def game(gameId, playerId):
+     return render_template("game.html", gameId=gameId, playerId=playerId);
+
 #@app.route('/newGame<command>')
 #def show_user_profile(command):
 #    # show the user profile for that user

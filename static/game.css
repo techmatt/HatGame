@@ -1,0 +1,18 @@
+
+.seconds_remaining {
+  font-size: 36pt;
+  color: red;
+}
+
+.start_button {
+  font-size: 36pt;
+}
+
+
+.word_being_guessed {
+  font-size: 36pt;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  width: 100%;
+}
