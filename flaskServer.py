@@ -20,13 +20,7 @@ activeGames = {}
 
 @app.route('/')
 def homePageURL():
-	return render_template("base.html", message="Hello Flask!")
-	try:
-		#return send_from_directory('template/', 'index.html', as_attachment=False)
-		return render_template("base.html", message="Hello Flask!")
-	except Exception as err:
-		print('failed:', str(err))
-		return ErrorResponse(err)
+	return render_template("homepage.html")
 
 @app.route('/new-game.html')
 def newGameURL():
