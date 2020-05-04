@@ -5,10 +5,11 @@
     <title>Hat Game - Portal</title>
 	<link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
 	<link rel="stylesheet" href="{{ url_for('static', filename='game-portal.css') }}">
+	<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
   </head>
 	<body>
 		<section id="header">
-			<img id="logo" src="logo.jpg"></img>
+			<img id="logo" src="{{ url_for('static', filename='logo.jpg') }}"></img>
 			<div id="playerList">
 				<div class="player-icon team-1 inactive">
 					<img src="player.jpg"/>
@@ -29,11 +30,11 @@
 				<h1>Game Portal</h1>
 				<a href="{{ video_url }}"><button>Video link</button></a>
 				<p>Click your player name below to join the game</p>
-				<ul id="playerlist">
+				<div id="playerlist">
 				{% for item in playerlist %}
-					<li><a href="{{ item.href }}"><button>{{ item.caption }}</button></a></li>
+					<a href="{{ item.href }}"><button class="player-button">{{ item.caption }}</button></a>
 				{% endfor %}
-				</ul>
+				</div>
 			</div>
 		</section>
 		<section id="footer">

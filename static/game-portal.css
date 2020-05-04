@@ -1,4 +1,13 @@
 /* styles for the game-portal page */
-#playerlist li {
-	margin-bottom: .3rem;
+#playerlist {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: left;
+}
+#playerlist>a {
+	padding: .3em;
+	min-width: 5em;
+}
+#playerlist .player-button {
+	width: 100%;
 }

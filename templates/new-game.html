@@ -4,10 +4,11 @@
 		<title>Hat Game - New Game</title>
 		<link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
 		<link rel="stylesheet" href="{{ url_for('static', filename='new-game.css') }}">
+		<link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.ico') }}">
 	</head>
 	<body>
 		<section id="header">
-			<img id="logo" src="logo.jpg"></img>
+			<img id="logo" src="{{ url_for('static', filename='logo.jpg') }}"></img>
 			<div id="playerList">
 				<div class="player-icon team-1 inactive">
 					<img src="player.jpg"/>
