@@ -49,27 +49,29 @@ body {
     border-bottom-right-radius: .3em;
     background-color: #673AB7;
     padding: .5em;
-    box-shadow: .1em .1em #00000066
+    box-shadow: .1em .1em #000000;
 }
-button {
+button, .button {
     border-radius: .3em;
-    box-shadow: .1em .1em #00000066;
+    box-shadow: .1em .1em #000000;
     padding: .3em;
 	background-color: #4caf50;
 	color: white;
     text-align: center;
     font-size: large;
+	margin: auto;
+	border: 0px;
 }
 #footer button {
     margin: auto;
     max-width: 30%;
 }
-button:hover {
+button:hover, .button:hover {
     background-color: #169000;
 }
 button:active {
     background-color: #72ce76;
-    box-shadow: .1em .1em #00000066 inset;
+    box-shadow: .1em .1em #000000 inset;
 }
 .inactive {
     display: none;

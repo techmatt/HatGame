@@ -1,1 +1,4 @@
-/* styles for the new-game page */
+/* styles for the game-portal page */
+#playerlist li {
+	margin-bottom: .3rem;
+}
