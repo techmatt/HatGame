@@ -4,8 +4,13 @@
   color: blue;
 }
 
-.phrase_text_input {
-  font-size: 72pt;
+.phrase_input_prompt {
+  font-size: 12pt;
+  color: blue;
+}
+
+input.phrase_text_input {
+  font-size: 24pt;
 }
 
 .phrase_input_submit_button {
@@ -13,19 +18,13 @@
     color: green
 }
 
-
-.seconds_remaining {
-  font-size: 36pt;
-  color: red;
-}
-
 .start_button {
   font-size: 36pt;
 }
 
-.phrase_input_prompt {
-    font-size: 36pt;
-    color: blue;
+.seconds_remaining {
+  font-size: 36pt;
+  color: red;
 }
 
 .word_being_guessed {

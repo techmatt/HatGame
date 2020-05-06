@@ -61,6 +61,7 @@ class PhraseListCreator extends React.Component {
               },
               e('input',
                 {
+                  className: 'phrase_text_input',
                   type: 'text',
                   ref: this.textInputRefs[i],
                 }
