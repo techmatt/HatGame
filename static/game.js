@@ -152,55 +152,54 @@ class WordListConfirmer extends React.Component {
   //   callbackAfterConfirmation - function that takes confirmedWords
   constructor(props) {
     super(props);
-    this.handleSubmit = this.handleSubmit.bind(this)
     console.log("creating a WordListConfirmer with words %o", props.words);
     this.wordCheckboxRefs = props.words.map(w => React.createRef());
-    console.log("refs %o",  this.wordCheckboxRefs);
+    console.log("refs %o", this.wordCheckboxRefs);
   }
-  
+
   handleSubmit(event) {
     event.preventDefault();
     const confirmedWords = [];
     console.log("refs %o", this.wordCheckboxRefs);
     this.props.words.forEach(
       (word, i) => {
-	const checkbox = this.wordCheckboxRefs[i].current;
-	if (checkbox.checked) {
-	  confirmedWords.push(word);
-	}
+        const checkbox = this.wordCheckboxRefs[i].current;
+        if (checkbox.checked) {
+          confirmedWords.push(word);
+        }
       }
     );
     console.log("Player confirmed words " + confirmedWords);
     this.props.callbackAfterConfirmation(confirmedWords);
   }
-  
+
   render() {
     return e(
       'form',
-      {onSubmit: this.handleSubmit},
+      { onSubmit: this.handleSubmit.bind(this) },
       this.props.words.map(
-	(word, i) => 
-	  e('div', 
-	    {key: word},
-	    e('input',
-	      {type: "checkbox",
-	       defaultChecked: "true",
-	       ref: this.wordCheckboxRefs[i],
-	       name: "checkbox " + word
-	      }
-	     ),
-	    e('label', 
-	      null,
-	      word)
-	   )
+        (word, i) =>
+          e('div',
+            { key: word },
+            e('input',
+              {
+                type: "checkbox",
+                defaultChecked: "true",
+                ref: this.wordCheckboxRefs[i],
+                name: "checkbox " + word
+              }
+            ),
+            e('label',
+              null,
+              word)
+          )
       ),
       e('button',
-        {type:"submit"},
+        { type: "submit" },
         "Submit")
     )
   }
 }
-
 
 // Main game
 class HatGameApp extends React.Component {
@@ -212,8 +211,6 @@ class HatGameApp extends React.Component {
       mainPhase: 'Loading',
       wordsClicked: [], // Not from server, tracked on client
     }
-    this.handleWordConfirmation = this.handleWordConfirmation.bind(this);
-    this.handleTimerExpiration = this.handleTimerExpiration.bind(this);
     console.log("Current player %o", props.playerId)
   }
 
@@ -278,29 +275,33 @@ class HatGameApp extends React.Component {
   }
 
   renderWhenStarted() {
-      if (this.isItMyTurn()) {
-        const wordsToRender = this.state.hat.slice(0, 2);
-        return e(
-	  'div',
-	  null,
-	  e(CountdownTimer,
-	    {initialSeconds: this.state.secondsPerTurn,
-	     timerExpirationCallback: this.handleTimerExpiration}
-	   ),
-	  e(ClickableWordDisplay,
-	    {words: wordsToRender,
-	     onWordClicked: this.onWordClicked.bind(this)}
-	   )
-        )        
-      } else {
-        return e(
-	  'div',
-	  null,
-	  'Waiting for current player to start game'
-	);
-      }
+    if (this.isItMyTurn()) {
+      const wordsToRender = this.state.hat.slice(0, 2);
+      return e(
+        'div',
+        null,
+        e(CountdownTimer,
+          {
+            initialSeconds: this.state.secondsPerTurn,
+            timerExpirationCallback: this.handleTimerExpiration.bind(this)
+          }
+        ),
+        e(ClickableWordDisplay,
+          {
+            words: wordsToRender,
+            onWordClicked: this.onWordClicked.bind(this)
+          }
+        )
+      )
+    } else {
+      return e(
+        'div',
+        null,
+        'Waiting for current player to start game'
+      );
+    }
   }
-    
+
   renderWhenPlayingGame() {
     switch (this.state.subPhase) {
       case 'GameSubPhase.WaitForStart':
@@ -313,7 +314,7 @@ class HatGameApp extends React.Component {
         return e(WordListConfirmer,
           {
             words: this.state.wordsClicked,
-            callbackAfterConfirmation: this.handleWordConfirmation,
+            callbackAfterConfirmation: this.handleWordConfirmation.bind(this),
           }
         );
 
