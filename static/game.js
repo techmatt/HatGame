@@ -1,5 +1,85 @@
+const USE_FAKE_STATE = true;
+const FAKE_STATE = {
+  //mainPhase: 'GameMainPhase.Charade',
+  mainPhase: 'GameMainPhase.Write',
+  subPhase: 'GameSubPhase.WaitForStart',
+  hat: [
+    'Cat',
+    'Dog',
+    'Elephant',
+    'Zebra',
+  ],
+  secondsPerTurn: 7,
+  activePlayerIdx: 0,
+  phrasesPerPlayer: 3,
+  players: ['matt', 'amanda', 'graham', 'peter'], 
+  scores: [40, 25],
+  videoURL: 'https://zoom.com',
+};
+
 const e = React.createElement;
 
+// Used to collect the initial phrase list from a player
+class PhraseListCreator extends React.Component {
+  // props:
+  //   phraseCount - number of phrases to collect
+  //   onPhraseListCreation - function to call once phrases are collected that takes phraseList
+  constructor(props) {
+    super(props);
+    console.log("creating a PhraseListCreator for %o phrases", props.phraseCount);
+    this.textInputRefs = Array(props.phraseCount).fill(0).map(x => React.createRef());
+    console.log("text input refs %o",  this.textInputRefs);
+  }
+  
+  handleSubmit(event) {
+    event.preventDefault();
+    const  phrases = this.textInputRefs.map(
+      r => r.current.value
+    )
+    console.log("Player wrote phrases %o", phrases);
+    this.props.onPhraseListCreation(phrases);
+  }
+  
+  render() {
+    return e(
+      'div',  
+      null,
+      e(
+        'div',
+        { className: 'phrase_input_prompt' },
+        `Please enter ${this.props.phraseCount} phrases that most players will recognize.`
+      ),
+      e(
+	      'form',
+        { onSubmit: this.handleSubmit.bind(this) },
+        this.textInputRefs.map(
+          (textRef, i) =>
+            e('div',
+              {
+                className: 'phrase_text_input',
+                key: i, // React wants a unique key per item for checking state updates
+              },
+              e('input',
+                {
+                  type: 'text',
+                  ref: this.textInputRefs[i],
+                }
+              ),
+            )
+        ),
+        e('button',
+          {
+            type: "submit",
+            className: 'phrase_input_submit_button'
+          },
+          "Submit"
+        )
+      )
+    )
+  }
+}
+
+// Used to display the two words the current player is getting others to guess
 // props:
 //   words - the words to display
 //   onWordClicked -  function that takes a word, to be called when a word is clicked
@@ -21,6 +101,7 @@ function ClickableWordDisplay(props) {
   )
 }
 
+// Shows the remaining time in the current turn
 class CountdownTimer extends React.Component {
   // props:
   // -- initialSeconds - number of seconds to count down from
@@ -53,7 +134,6 @@ class CountdownTimer extends React.Component {
       }))
     }
   }
-
   
   render() {
     return e(
@@ -64,6 +144,7 @@ class CountdownTimer extends React.Component {
   }
 }
 
+// Lets the current player confirm the list of words they got
 class WordListConfirmer extends React.Component {
   // props:
   //   words - list of words to confirm
@@ -119,29 +200,33 @@ class WordListConfirmer extends React.Component {
   }
 }
 
+
+// Main game
 class HatGameApp extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      subPhase: 'GameSubPhase.WaitForStart',
-      mainPhase: 'GameMainPhase.Charade',
-      hat: [
-        'Cat', 
-        'Dog',
-        'Elephant',
-        'Zebra',
-       ],
-      secondsPerTurn: 30,
-      activePlayerIdx: 0,
-      phrasesPerPlayer: 7,
-      players: ['matt', 'amanda', 'graham', 'peter'], 
-      scores: [40, 25],
-      videoURL: 'https://zoom.com',
+      mainPhase: 'Loading',
       wordsClicked: [], // Not from server, tracked on client
     }
     this.handleWordConfirmation = this.handleWordConfirmation.bind(this);
     this.handleTimerExpiration = this.handleTimerExpiration.bind(this);
-    this.onWordClicked = this.onWordClicked.bind(this);
+  }
+
+  componentDidMount() {
+    if (USE_FAKE_STATE) {
+       this.setState(FAKE_STATE);
+    } else {
+      this.setState(getStateFromServer());
+    }
+  }
+
+  getStateFromServer() {
+    // TODO
+  }
+
+  handlePhrasesCreation(phrases) {
+    console.log("Telling server about wordList: %o", phrases);
   }
   
   onWordClicked(word) {
@@ -195,12 +280,12 @@ class HatGameApp extends React.Component {
 	  'div',
 	  null,
 	  e(CountdownTimer,
-	    {initialSeconds: 13,
+	    {initialSeconds: this.state.secondsPerTurn,
 	     timerExpirationCallback: this.handleTimerExpiration}
 	   ),
 	  e(ClickableWordDisplay,
 	    {words: wordsToRender,
-	     onWordClicked: this.onWordClicked}
+	     onWordClicked: this.onWordClicked.bind(this)}
 	   )
         )        
       } else {
@@ -212,26 +297,61 @@ class HatGameApp extends React.Component {
       }
   }
     
-  render() {
-    switch(this.state.subPhase) {
+  renderWhenPlayingGame() {
+    switch (this.state.subPhase) {
       case 'GameSubPhase.WaitForStart':
-      	return this.renderWhenWaitingForStart();
-        
+        return this.renderWhenWaitingForStart();
+
       case 'GameSubPhase.Started':
         return this.renderWhenStarted();
-        
+
       case 'GameSubPhase.ConfirmingPhrases':
-      return e(WordListConfirmer,
-	       {words: this.state.wordsClicked,
-		callbackAfterConfirmation: this.handleWordConfirmation
-	       }
-	      );
-        
+        return e(WordListConfirmer,
+          {
+            words: this.state.wordsClicked,
+            callbackAfterConfirmation: this.handleWordConfirmation,
+          }
+        );
+
       default:
-      return e(
-	'div', null,
-        `Not implemented yet: ${this.state.subPhase}`
-      )
+        return e(
+          'div', null,
+          `Sub phase not implemented yet: ${this.state.subPhase}`
+        )
+    }
+  }
+
+  render() {
+    switch (this.state.mainPhase) {
+      case 'Loading':
+        return e(
+          'div', { className: "loading_text" },
+          'Loading....'
+        )
+      case
+        'GameMainPhase.Write':
+        return e(
+          PhraseListCreator,
+          {
+            phraseCount: this.state.phrasesPerPlayer,
+            onPhraseListCreation: this.handlePhrasesCreation.bind(this),
+          }
+        )
+      case 'GameMainPhase.MultiWord':
+      case 'GameMainPhase.SingleWord':
+      case 'GameMainPhase.Charade':
+        return this.renderWhenPlayingGame();
+      case 'GameMainPhase.Done':
+        return e(
+          'div',
+          { className: "game_done_text" },
+          'Game complete, thanks for playing!'
+        )
+      default:
+        return e(
+          'div', null,
+          `Main phase not implemented yet: ${this.state.mainPhase}`
+        )
     }
   }
 }

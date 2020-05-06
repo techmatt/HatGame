@@ -1,4 +1,19 @@
 
+.loading_text {
+  font-size: 36pt;
+  color: blue;
+}
+
+.phrase_text_input {
+  font-size: 72pt;
+}
+
+.phrase_input_submit_button {
+    font-size: 36pt;
+    color: green
+}
+
+
 .seconds_remaining {
   font-size: 36pt;
   color: red;
@@ -8,6 +23,10 @@
   font-size: 36pt;
 }
 
+.phrase_input_prompt {
+    font-size: 36pt;
+    color: blue;
+}
 
 .word_being_guessed {
   font-size: 36pt;
@@ -15,4 +34,8 @@
   border-radius: 4px;
   cursor: pointer;
   width: 100%;
+}
+
+.game_done_text {
+  font-size: 36pt;
 }
