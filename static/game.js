@@ -1,5 +1,124 @@
 const e = React.createElement;
 
+// props:
+//   words - the words to display
+//   onWordClicked -  function that takes a word, to be called when a word is clicked
+function ClickableWordDisplay(props) {
+  return e(
+    'div',
+    null, 
+    props.words.map(word => (
+      e('div',
+	{key: word},
+	e('button',
+          {className: "word_being_guessed",
+           onClick: () => props.onWordClicked(word)
+          },
+          word
+	 )
+       )
+    ))
+  )
+}
+
+class CountdownTimer extends React.Component {
+  // props:
+  // -- initialSeconds - number of seconds to count down from
+  // -- timerExpirationCallback -- function to call when timer is done
+  constructor(props) {
+    super(props);
+    this.state = {
+      secondsRemaining: props.initialSeconds,
+    };
+  }
+
+  componentDidMount() {
+    this.timerID = setInterval(
+      () => this.decrementSecondsRemaining(),
+      1000
+    );
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.timerID);
+  }
+
+  decrementSecondsRemaining() {
+    if (this.state.secondsRemaining <= 1.0 && this.state.secondsRemaining > 0.0) {
+      this.props.timerExpirationCallback();
+      this.props.timerExpirationCallback();
+    } else {
+      this.setState((state, props) => ({
+        secondsRemaining: state.secondsRemaining - 1
+      }))
+    }
+  }
+
+  
+  render() {
+    return e(
+      'div', 
+      {className: "seconds_remaining"},    
+      `${Math.round(this.state.secondsRemaining)}`
+     )
+  }
+}
+
+class WordListConfirmer extends React.Component {
+  // props:
+  //   words - list of words to confirm
+  //   callbackAfterConfirmation - function that takes confirmedWords
+  constructor(props) {
+    super(props);
+    this.handleSubmit = this.handleSubmit.bind(this)
+    console.log("creating a WordListConfirmer with words %o", props.words);
+    this.wordCheckboxRefs = props.words.map(w => React.createRef());
+    console.log("refs %o",  this.wordCheckboxRefs);
+  }
+  
+  handleSubmit(event) {
+    event.preventDefault();
+    const confirmedWords = [];
+    console.log("refs %o", this.wordCheckboxRefs);
+    this.props.words.forEach(
+      (word, i) => {
+	const checkbox = this.wordCheckboxRefs[i].current;
+	if (checkbox.checked) {
+	  confirmedWords.push(word);
+	}
+      }
+    );
+    console.log("Player confirmed words " + confirmedWords);
+    this.props.callbackAfterConfirmation(confirmedWords);
+  }
+  
+  render() {
+    return e(
+      'form',
+      {onSubmit: this.handleSubmit},
+      this.props.words.map(
+	(word, i) => 
+	  e('div', 
+	    {key: word},
+	    e('input',
+	      {type: "checkbox",
+	       defaultChecked: "true",
+	       ref: this.wordCheckboxRefs[i],
+	       name: "checkbox " + word
+	      }
+	     ),
+	    e('label', 
+	      null,
+	      word)
+	   )
+      ),
+      e('button',
+        {type:"submit"},
+        "Submit")
+    )
+  }
+}
+
 class HatGameApp extends React.Component {
   constructor(props) {
     super(props)
@@ -13,7 +132,6 @@ class HatGameApp extends React.Component {
         'Zebra',
        ],
       secondsPerTurn: 30,
-      secondsRemaining: 13,
       activePlayerIdx: 0,
       phrasesPerPlayer: 7,
       players: ['matt', 'amanda', 'graham', 'peter'], 
@@ -21,47 +139,34 @@ class HatGameApp extends React.Component {
       videoURL: 'https://zoom.com',
       wordsClicked: [], // Not from server, tracked on client
     }
+    this.handleWordConfirmation = this.handleWordConfirmation.bind(this);
+    this.handleTimerExpiration = this.handleTimerExpiration.bind(this);
+    this.onWordClicked = this.onWordClicked.bind(this);
   }
   
   onWordClicked(word) {
-    const oldWordslicked = this.state.wordsClicked;
-    const oldHat = this.state.hat;
+    this.setState((state, props) => ({
+      hat: state.hat.filter(w => w !== word),
+      wordsClicked: state.wordsClicked.concat([word]),
+      // update the subPhase if we just clicked the last word
+      subPhase: (state.hat.length == 1 ? 'GameSubPhase.ConfirmingPhrases' : state.subPhase)
+    }));
+  }
+
+  handleTimerExpiration() {
+    console.log("Turn ended due to timer");
     this.setState({
-      hat: oldHat.filter(w => w !== word),
-      wordsClicked: oldWordslicked.concat([word]),
+      subPhase: 'GameSubPhase.ConfirmingPhrases'
     });
-    // Check if we just clicked the last word in the hat
-    if (oldHat.length == 1) {
-    	this.endTurn();
-    }
   }
-  
-  endTurn() {
-  	clearInterval(this.timerId)
-      console.log("telling server turn is done");
-      this.setState({subPhase: 'GameSubPhase.ConfirmingPhrases'})
+    
+  handleWordConfirmation(confirmedWords) {
+    console.log("main app notified of confirmedWords %o", confirmedWords);
   }
-  
-  decrementSecondsRemaining() {
-    if (this.state.secondsRemaining <= 1.0 && this.state.secondsRemaining > 0.0) {
-    	this.endTurn();
-    } else {
-  	  this.setState((state, props) => ({
-        secondsRemaining: state.secondsRemaining - 1
-      }))
-    }
-  }
-  
-  startTimer() {
-  	this.timerId = setInterval(() => this.decrementSecondsRemaining(), 
-    1000);
-  }
-  
+
   isItMyTurn() {
     return true; // todo
   }
-  
-  
 
   renderWhenWaitingForStart() {
     if (this.isItMyTurn()) {
@@ -70,78 +175,43 @@ class HatGameApp extends React.Component {
             {className: 'start_button',
              onClick: () => {
                 this.setState({subPhase: 'GameSubPhase.Started'});
-                this.startTimer();
               }
              },
               'Start'
            )
-         )        
+         )
         } else {
-        return e('div', null,
-          'Waiting for current player to start game'
-        )
+          return e(
+	    'div', null,
+            'Waiting for current player to start game'
+          )
         }
   }
 
-    renderWhenStarted() {
+  renderWhenStarted() {
       if (this.isItMyTurn()) {
-          let wordsToRender = this.state.hat.slice(0, 2);
-        return e('div', null,
-          e('div', 
-          {className:"seconds_remaining"},
-          
-            `${Math.round(this.state.secondsRemaining)}`),
-          e('div', null, 
-            wordsToRender.map(word => (
-              e('div',
-              {key: word},
-              e('button',
-                {className: "word_being_guessed",
-                onClick: () => this.onWordClicked(word)
-                },
-                word
-              )
-              )
-            ))
-          )
-          )
-        
-        } else {
-        return e('div', null,
-          'Waiting for current player to start game'
-				);
-        }
+        const wordsToRender = this.state.hat.slice(0, 2);
+        return e(
+	  'div',
+	  null,
+	  e(CountdownTimer,
+	    {initialSeconds: 13,
+	     timerExpirationCallback: this.handleTimerExpiration}
+	   ),
+	  e(ClickableWordDisplay,
+	    {words: wordsToRender,
+	     onWordClicked: this.onWordClicked}
+	   )
+        )        
+      } else {
+        return e(
+	  'div',
+	  null,
+	  'Waiting for current player to start game'
+	);
+      }
   }
-  
-  handleConfirmWords(event) {
-  	event.preventDefault();
-    console.log("Confirming words...")
-  }
-  
-  renderConformingPhrases() {
-  	console.log("Confirming words %o", this.state.wordsClicked);
-    return e('form',
-      {onSubmit: this.handleConfirmWords},
-      this.state.wordsClicked.map(word => 
-        e('div', 
-          {key: word},
-          e('input',
-           {type: "checkbox",
-            defaultChecked: "true",
-            name: "checkbox " + word
-            }
-          ),
-          e('label', 
-            null,
-            word)
-        )
-      ),
-      e('button',
-               {type:"submit"},
-               "Submit")
-      )
-  }
-
+    
   render() {
     switch(this.state.subPhase) {
       case 'GameSubPhase.WaitForStart':
@@ -151,15 +221,19 @@ class HatGameApp extends React.Component {
         return this.renderWhenStarted();
         
       case 'GameSubPhase.ConfirmingPhrases':
-        return this.renderConformingPhrases();
+      return e(WordListConfirmer,
+	       {words: this.state.wordsClicked,
+		callbackAfterConfirmation: this.handleWordConfirmation
+	       }
+	      );
         
       default:
-        return e('div', null,
-          `Not implemented yet: ${this.state.subPhase}`
-          )
-       }
+      return e(
+	'div', null,
+        `Not implemented yet: ${this.state.subPhase}`
+      )
+    }
   }
 }
 
 ReactDOM.render(e(HatGameApp), document.querySelector("#app"))
-
