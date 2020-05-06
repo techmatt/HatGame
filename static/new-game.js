@@ -26,6 +26,10 @@
 		if((new Set(playerArray)).size !== playerArray.length) {
 			return { error: "Duplicate name detected. Please provide unique names for all players." };
 		}
+		// check if game ID is empty
+		if(document.querySelector("#gameId").value === "") {
+			return { error: "Game ID is a required field." };
+		}
 		// build the gameDict object
 		let gameDict = {
 			id: document.querySelector("#gameId").value,

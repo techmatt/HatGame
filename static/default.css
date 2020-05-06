@@ -1,4 +1,7 @@
 /* shared styles for the hat game application */
+* {
+	box-sizing: border-box;
+}
 body {
     background-color: grey;
     display: flex;
@@ -15,17 +18,51 @@ body {
     border-top-right-radius: .3em;
     border-top-left-radius: .3em;
 }
+#header #title {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+#header #title span {
+	font-size: 2em;
+	font-weight: bold;
+	margin: 0 auto;
+}
+img#logo { 
+	width: 100px;
+	height: 100px;
+	cursor: pointer;
+}
 #playerList {
     display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-start;
+    align-content: space-evenly;
 }
 #playerList p {
     margin: 0px;
 }
+.player-icon {
+	align-self: flex-start;
+	min-width: 3em;
+	text-align: center;
+	color: white;
+	margin: .1em;
+	border-radius: .3em;
+	min-height: 3em;
+	line-height: 3em;
+	padding: .2em;
+}
 .player-icon.team-1 {
-    border: .2em solid #3F51B5;
+    border: .1em solid #18a9c5;
+	background-color: #18a9c5;
 }
 .player-icon.team-2 {
-    border: .2em solid #F44336;
+    border: .1em solid #ff2222;
+	background-color: #ff2222;
+}
+.player-icon.active {
+	border: .1em solid #ffffff;
 }
 #main {
     display: flex;
@@ -40,6 +77,10 @@ body {
 }
 .input-section {
     margin-bottom: .3em;
+}
+input {
+	padding-right: 1em;
+	padding-left: 1em;
 }
 #optionList .input-section input {
     float: right;
@@ -61,6 +102,8 @@ button, .button {
     font-size: large;
 	margin: auto;
 	border: 0px;
+	min-width: 5em;
+	cursor: pointer;
 }
 #footer button {
     margin: auto;

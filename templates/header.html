@@ -1,0 +1,15 @@
+<section id="header">
+	<div id="title">
+		<a href="/new-game.html">
+			<img id="logo" alt="the hat game logo" src="{{ url_for('static', filename='logo.png') }}"></img>
+		</a>
+		<span>Hat Game</span>
+	</div>
+	<div id="playerList">
+	{% for item in playerlist %}
+		<div class="player-icon {{ loop.cycle('team-1', 'team-2') }}">
+			{{ item.caption }}
+		</div>
+	{% endfor %}
+	</div>
+</section>

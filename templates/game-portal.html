@@ -1,39 +1,20 @@
 <!DOCTYPE HTML>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Hat Game - Portal</title>
-	<link rel="stylesheet" href="{{ url_for('static', filename='default.css') }}">
-	<link rel="stylesheet" href="{{ url_for('static', filename='game-portal.css') }}">
-  </head>
+	{% with title="Game Portal", filename="game-portal" %}
+		{% include 'head.html' %} 
+	{% endwith %}
 	<body>
-		<section id="header">
-			<img id="logo" src="logo.jpg"></img>
-			<div id="playerList">
-				<div class="player-icon team-1 inactive">
-					<img src="player.jpg"/>
-				</div>
-				<div class="player-icon team-1 inactive">
-					<img src="player.jpg"/>
-				</div>
-				<div class="player-icon team-2 inactive">
-					<img src="player.jpg"/>
-				</div>
-				<div class="player-icon team-2 inactive">
-					<img src="player.jpg"/>
-				</div>
-			</div>
-		</section>
+		{% include 'header.html' %}
 		<section id="main">
 			<div class="flex-window">
 				<h1>Game Portal</h1>
 				<a href="{{ video_url }}"><button>Video link</button></a>
 				<p>Click your player name below to join the game</p>
-				<ul id="playerlist">
+				<div id="playerlist">
 				{% for item in playerlist %}
-					<li><a href="{{ item.href }}"><button>{{ item.caption }}</button></a></li>
+					<a href="{{ item.href }}"><button class="player-button">{{ item.caption }}</button></a>
 				{% endfor %}
-				</ul>
+				</div>
 			</div>
 		</section>
 		<section id="footer">
