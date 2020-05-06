@@ -51,7 +51,7 @@ def gamePortal(gameID):
 
 @app.route('/games/<gameId>/<playerId>', methods=['GET'])
 def game(gameId, playerId):
-     return render_template("game.html", gameId=gameId, playerId=playerId);
+    return render_template("game.html", gameId=gameId, playerId=playerId);
 
 #@app.route('/newGame<command>')
 #def show_user_profile(command):

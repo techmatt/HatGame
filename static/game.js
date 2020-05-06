@@ -204,6 +204,8 @@ class WordListConfirmer extends React.Component {
 
 // Main game
 class HatGameApp extends React.Component {
+  // props:
+  //  playerId - the name of the player viewing this app
   constructor(props) {
     super(props)
     this.state = {
@@ -212,6 +214,7 @@ class HatGameApp extends React.Component {
     }
     this.handleWordConfirmation = this.handleWordConfirmation.bind(this);
     this.handleTimerExpiration = this.handleTimerExpiration.bind(this);
+    console.log("Current player %o", props.playerId)
   }
 
   componentDidMount() {
@@ -357,4 +360,10 @@ class HatGameApp extends React.Component {
   }
 }
 
-ReactDOM.render(e(HatGameApp), document.querySelector("#app"))
+const appElement = document.querySelector("#app");
+
+ReactDOM.render(e(
+  HatGameApp, 
+  {playerId: appElement.getAttribute("data-player-id")}
+  ), 
+  appElement)
