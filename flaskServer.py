@@ -12,6 +12,12 @@ from python.gameSession import GameSession, GameError
 app = Flask(__name__)
 red = redis.StrictRedis()
 
+try:
+	red.ping()
+	print('redis ping succeeded')
+except:
+	print('redis ping failed. make sure redis-server is running.')
+
 class ParamError(Exception):
     pass
 
