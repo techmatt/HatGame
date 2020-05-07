@@ -4,6 +4,20 @@
   color: blue;
 }
 
+.player_list_table tr:nth-child(odd) {
+  background: lightblue;
+}
+
+.player_list_table tr:nth-child(even) {
+  background: pink;
+}
+
+.active_player_in_list {
+  font-weight: bold
+}
+
+/* if needed: .passive_player_in_list */
+
 .phrase_input_prompt {
   font-size: 12pt;
   color: blue;
