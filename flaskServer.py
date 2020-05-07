@@ -1,6 +1,7 @@
 
 import traceback
 import sys
+import redis
 from flask import Flask, request, Response, send_from_directory, render_template, jsonify, json
 from werkzeug.exceptions import BadRequestKeyError
 from collections import Iterable
@@ -9,6 +10,13 @@ from markupsafe import escape
 from python.gameSession import GameSession, GameError
 
 app = Flask(__name__)
+red = redis.StrictRedis()
+
+try:
+	red.ping()
+	print('redis ping succeeded')
+except:
+	print('redis ping failed. make sure redis-server is running.')
 
 class ParamError(Exception):
     pass
@@ -17,6 +25,18 @@ def ErrorResponse(obj):
     return Response(str(obj), status=400, mimetype='application/text')
 
 activeGames = {}
+
+def getStreamName(gameID, playerID):
+    return gameID + '_' + playerID + '_events'
+
+def eventStream(streamName):
+    pubsub = red.pubsub()
+    pubsub.subscribe(streamName)
+    # TODO: handle client disconnection.
+    for message in pubsub.listen():
+        print('message on ' + streamName + ':', message)
+        if message['type']=='message':
+            yield 'data: %s\n\n' % message['data'].decode('utf-8')
 
 @app.route('/')
 def homePageURL():
@@ -29,6 +49,15 @@ def newGameURL():
 @app.route('/gamelist')
 def gameListHTML():
     return render_template("game-list.html")
+
+@app.route('/api/stream/<gameID>/<playerID>/events', methods=['GET'])
+def stream(gameID, playerID):
+    try:
+        game = activeGames[gameID]
+    except KeyError as err:
+        return ErrorResponse(err)
+    return flask.Response(eventStream(getStreamName(gameID, playerID)),
+                          mimetype="text/event-stream")
 
 @app.route('/games/<gameID>/', methods=['GET'])
 def gamePortal(gameID):
@@ -51,7 +80,7 @@ def gamePortal(gameID):
 
 @app.route('/games/<gameId>/<playerId>', methods=['GET'])
 def game(gameId, playerId):
-    return render_template("game.html", gameId=gameId, playerId=playerId);
+    return render_template("game.html", gameId=gameId, playerId=playerId)
 
 #@app.route('/newGame<command>')
 #def show_user_profile(command):
@@ -74,10 +103,6 @@ def getParam(requestJSON, param, isList=False, isInt=False, isString=False):
     if isList:
         if not isinstance(result, Iterable):
             raise ParamError('list is not iterable')
-        #result = result.split(',')
-        #if len(result) <= 1:
-        #    print('not a valid list:', result)
-        #    raise ParamError('not a valid list')
 
     if isInt:
         result = int(result)
@@ -173,6 +198,11 @@ def startTurn(gameID, playerID):
         game.startPlayerTurn(playerID)
     except GameError as err:
         return ErrorResponse(err)
+
+    for player in game.players:
+        stream = getStreamName(gameID, player.id)
+        print('stream:', stream)
+        red.publish(stream, 'refresh')
     return 'turn started'
 
 @app.route('/games/<gameID>/<playerID>/endturn', methods=['POST'])
@@ -202,7 +232,6 @@ def confirmPhrases(gameID, playerID):
         return ErrorResponse(err)
 
     requestJSON = request.get_json()
-    print('requestJSON:', requestJSON)
     try:
         acceptedPhrases = getParam(requestJSON, 'acceptedPhrases', isList=True)
     except ParamError as err:
@@ -213,3 +242,8 @@ def confirmPhrases(gameID, playerID):
     except GameError as err:
         return ErrorResponse(err)
     return 'phrases recorded'
+
+if __name__ == '__main__':
+    print('running with multithreading')
+    app.debug = True
+    app.run(threaded=True)
