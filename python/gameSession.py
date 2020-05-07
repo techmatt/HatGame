@@ -1,6 +1,7 @@
 import os
 import sys
 import random
+import threading
 from datetime import datetime
 from enum import Enum
 from collections.abc import Iterable
@@ -26,6 +27,7 @@ class Player:
         self.id = id
         self.idx = idx
         self.teamIdx = teamIdx
+        self.refreshEvent = threading.Event()
         self.phrases = []
 
 class Team:

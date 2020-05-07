@@ -1,7 +1,6 @@
 
 import traceback
 import sys
-import redis
 from flask import Flask, request, Response, send_from_directory, render_template, jsonify, json
 from werkzeug.exceptions import BadRequestKeyError
 from collections import Iterable
@@ -10,13 +9,6 @@ from markupsafe import escape
 from python.gameSession import GameSession, GameError
 
 app = Flask(__name__)
-red = redis.StrictRedis()
-
-try:
-	red.ping()
-	print('redis ping succeeded')
-except:
-	print('redis ping failed. make sure redis-server is running.')
 
 class ParamError(Exception):
     pass
@@ -26,21 +18,17 @@ def ErrorResponse(obj):
 
 activeGames = {}
 
-def getStreamName(gameID, playerID):
-    return gameID + '_' + playerID + '_events'
-
-def eventStream(streamName):
-    pubsub = red.pubsub()
-    pubsub.subscribe(streamName)
-    # TODO: handle client disconnection.
-    for message in pubsub.listen():
-        print('message on ' + streamName + ':', message)
-        if message['type']=='message':
-            yield 'data: %s\n\n' % message['data'].decode('utf-8')
+def eventStream(game, player):
+    event = player.refreshEvent
+    while True:
+        while not event.isSet():
+            event.clear()
+            print('refresh event triggered for', player.id)
+            yield 'data: refresh\n\n'
 
 @app.route('/')
 def homePageURL():
-	return render_template("index.html")
+    return render_template("index.html")
 
 @app.route('/new-game.html')
 def newGameURL():
@@ -54,9 +42,10 @@ def gameListHTML():
 def stream(gameID, playerID):
     try:
         game = activeGames[gameID]
+        player = game.playersByID[playerID]
     except KeyError as err:
         return ErrorResponse(err)
-    return flask.Response(eventStream(getStreamName(gameID, playerID)),
+    return flask.Response(eventStream(game, player),
                           mimetype="text/event-stream")
 
 @app.route('/games/<gameID>/', methods=['GET'])
@@ -199,10 +188,9 @@ def startTurn(gameID, playerID):
     except GameError as err:
         return ErrorResponse(err)
 
+    print('signalling refresh')
     for player in game.players:
-        stream = getStreamName(gameID, player.id)
-        print('stream:', stream)
-        red.publish(stream, 'refresh')
+        player.refreshEvent.set()
     return 'turn started'
 
 @app.route('/games/<gameID>/<playerID>/endturn', methods=['POST'])
