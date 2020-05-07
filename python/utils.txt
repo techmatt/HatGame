@@ -4,6 +4,11 @@ $env:FLASK_ENV = "development"
 flask run
 http://127.0.0.1:5000/
 
+https://github.com/jakubroztocil/chat
+pip install flask redis gevent gunicorn
+redis-server
+gunicorn --debug --worker-class=gevent -t 99999 app:app
+
 cd C:\Code\HatGame\python
 
 @app.route('/login', methods=['POST', 'GET'])
