@@ -21,14 +21,19 @@ activeGames = {}
 def eventStream(game, player):
     event = player.refreshEvent
     while True:
-        while not event.isSet():
-            event.clear()
-            print('refresh event triggered for', player.id)
-            yield 'data: refresh\n\n'
+        print('waiting for event to be set')
+        event.wait()
+        event.clear()
+        print('refresh event triggered for', player.id)
+        yield 'data: refresh\n\n'
 
 @app.route('/')
 def homePageURL():
     return render_template("index.html")
+
+@app.route('/stream-test.html')
+def streamTest():
+    return render_template("stream-test.html")
 
 @app.route('/new-game.html')
 def newGameURL():
@@ -45,11 +50,21 @@ def stream(gameID, playerID):
         player = game.playersByID[playerID]
     except KeyError as err:
         return ErrorResponse(err)
-    return flask.Response(eventStream(game, player),
-                          mimetype="text/event-stream")
+    print('registering for stream', gameID, playerID)
+    return Response(eventStream(game, player),
+                    mimetype="text/event-stream")
     """var source = new EventSource('/api/stream/<gameID>/<playerID>/events');
        source.onmessage = function (event) { alert(event.data); };"""
 
+@app.route('/api/refresh/<gameID>/', methods=['GET'])
+def signalRefreshDebug(gameID):
+    try:
+        game = activeGames[gameID]
+    except KeyError as err:
+        return ErrorResponse(err)
+    game.signalRefresh()
+    print('signaled refresh for', gameID)
+    return 'success'
 
 @app.route('/games/<gameID>/', methods=['GET'])
 def gamePortal(gameID):
