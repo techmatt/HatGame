@@ -35,7 +35,7 @@ const FAKE_STATE_OTHER_PLAYER_STARTED = {
   videoURL: 'https://zoom.com',
 };
 
-FAKE_STATE = FAKE_STATE_OTHER_PLAYER_STARTED;
+//FAKE_STATE = FAKE_STATE_OTHER_PLAYER_STARTED;
 //FAKE_STATE = FAKE_STATE_WRITING;
 //FAKE_STATE = FAKE_STATE_START_ACTIVE_PLAYER;
 const USE_FAKE_STATE = (typeof FAKE_STATE !== 'undefined');
@@ -256,30 +256,39 @@ class WordListConfirmer extends React.Component {
 class HatGameApp extends React.Component {
   // props:
   //  player - the name of the player viewing this app
+  // gameId - the id of the game
   constructor(props) {
     super(props)
     this.state = {
       mainPhase: 'Loading',
       wordsClicked: [], // Not from server, tracked on client
     }
-    console.log("Current player %o", props.player)
+    console.log("Constructing HatGameApp with props %o", props)
   }
 
   componentDidMount() {
     if (USE_FAKE_STATE) {
        this.setState(FAKE_STATE);
     } else {
-      this.setState(getStateFromServer());
+      this.getStateFromServer();
     }
   }
 
   getStateFromServer() {
-    // TODO
+    fetch('../../../api/gamestate/' + this.props.gameId)
+			.then(response => response.json())
+			.then(data => {
+        console.log("got state from server %o", data);
+        // Merge this.state with the server state, to preserve any local-only state
+				this.setState((state, props) => ({...this.state, ...data}));
+			});
   }
 
   handlePhrasesCreation(phrases) {
-    // TODO
-    console.log("Telling server about wordList: %o", phrases);
+    console.log("telling server we created phrases %o", phrases);
+    this.postData(
+      `/games/${this.props.gameId}/${this.props.player}/recordphrases`,
+    {phrases: phrases});
   }
   
   onWordClicked(word) {
@@ -297,10 +306,46 @@ class HatGameApp extends React.Component {
       subPhase: 'GameSubPhase.ConfirmingPhrases'
     });
   }
-    
-  handleWordConfirmation(confirmedWords) {
-    // TODO Tell server
-    console.log("main app notified of confirmedWords %o", confirmedWords);
+  
+  postData(endpoint, data) {
+     const responsePromise = fetch("../../.." + endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+    //return responsePromise.then(r => r.json()); // parses JSON response into native JavaScript objects
+    responsePromise.then(r => console.log(`server response: ${r}`));
+  }
+  /*
+  postData(endpoint, data) {
+    console.log(`posting to %o with data %o`, endpoint, data);
+    $.ajax({
+      type: "POST",
+      url: "../../.." + endpoint,
+      data: JSON.stringify(data),
+      contentType: "application/json; charset=utf-8",
+      dataType: "json",
+      success: function(response) {
+        if(response.error) {
+          alert(response.error);
+        } else {
+          console.log(`server response ${response}`)
+        }
+      },
+      failure: function(xhr, status, error) {
+        alert(`Could not connect with server. error: ${error}`);
+      }
+    });	
+  }
+  */
+
+  handlePhraseConfirmation(phrases) {
+    console.log("telling server we confirmed words %o", phrases);
+    this.postData(
+      `/games/${this.props.gameId}/${this.props.player}/confirmphrases`,
+    {acceptedPhrases: phrases});
   }
 
   isItMyTurn() {
@@ -373,7 +418,7 @@ class HatGameApp extends React.Component {
       return e(WordListConfirmer,
         {
           words: this.state.wordsClicked,
-          callbackAfterConfirmation: this.handleWordConfirmation.bind(this),
+          callbackAfterConfirmation: this.handlePhraseConfirmation.bind(this),
         }
       )
     } else {
@@ -458,6 +503,7 @@ const appElement = document.querySelector("#app");
 
 ReactDOM.render(e(
   HatGameApp, 
-  {player: appElement.getAttribute("data-player-id")}
+  {player: appElement.getAttribute("data-player-id"),
+  gameId: appElement.getAttribute("data-game-id")}
   ), 
   appElement);
