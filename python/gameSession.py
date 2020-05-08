@@ -94,6 +94,11 @@ class GameSession:
         result['videoURL'] = str(self.videoURL)
         return result
 
+    def signalRefresh(self):
+        print('signalling refresh')
+        for player in self.players:
+            player.refreshEvent.set()
+
     def log(self, text):
         if self.showLog:
             print(text)

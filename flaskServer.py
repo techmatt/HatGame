@@ -47,6 +47,9 @@ def stream(gameID, playerID):
         return ErrorResponse(err)
     return flask.Response(eventStream(game, player),
                           mimetype="text/event-stream")
+    """var source = new EventSource('/api/stream/<gameID>/<playerID>/events');
+       source.onmessage = function (event) { alert(event.data); };"""
+
 
 @app.route('/games/<gameID>/', methods=['GET'])
 def gamePortal(gameID):
@@ -67,8 +70,8 @@ def gamePortal(gameID):
     return render_template("game-portal.html", \
                            game_name=gameID, playerlist=playerList, video_url=game.videoURL)
 
-@app.route('/games/<gameId>/<playerId>', methods=['GET'])
-def game(gameId, playerId):
+@app.route('/games/<gameId>/<playerId>/', methods=['GET'])
+def gamePlayerView(gameId, playerId):
     return render_template("game.html", gameId=gameId, playerId=playerId)
 
 #@app.route('/newGame<command>')
@@ -171,6 +174,7 @@ def recordPhrases(gameID, playerID):
         game.recordPlayerPhrases(playerID, phrases)
     except GameError as err:
         return ErrorResponse(err)
+    game.signalRefresh()
     return 'phrases recorded'
 
 @app.route('/games/<gameID>/<playerID>/startturn', methods=['POST'])
@@ -187,10 +191,7 @@ def startTurn(gameID, playerID):
         game.startPlayerTurn(playerID)
     except GameError as err:
         return ErrorResponse(err)
-
-    print('signalling refresh')
-    for player in game.players:
-        player.refreshEvent.set()
+    game.signalRefresh()
     return 'turn started'
 
 @app.route('/games/<gameID>/<playerID>/endturn', methods=['POST'])
@@ -207,6 +208,7 @@ def endTurn(gameID, playerID):
         game.endPlayerTurn(playerID)
     except GameError as err:
         return ErrorResponse(err)
+    game.signalRefresh()
     return 'turn ended'
 
 @app.route('/games/<gameID>/<playerID>/confirmphrases', methods=['POST'])
@@ -229,6 +231,7 @@ def confirmPhrases(gameID, playerID):
         game.confirmPhrases(playerID, acceptedPhrases)
     except GameError as err:
         return ErrorResponse(err)
+    game.signalRefresh()
     return 'phrases recorded'
 
 if __name__ == '__main__':
