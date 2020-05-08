@@ -60,7 +60,7 @@ def processPostRequest(URL, json=None):
 
 
 def createValidPhrases(gameID):
-    gameState = processGetRequest(URLBase + 'api/gamestate', json={'id' : gameID})
+    gameState = processGetRequest(URLBase + 'api/gamestate/' + gameID)
     gameURLBase = URLBase + 'games/' + gameID + '/'
     players = gameState['players']
     phrasesPerPlayer = gameState['phrasesPerPlayer']

@@ -24,11 +24,11 @@ def randomString():
 
 def makeDebugGame():
     allPlayers = ['matt', 'amanda', 'graham', 'peter', 'nik', 'jason', 'ronan', 'john', 'glenn', 'sarah']
-    playerCount = random.randint(2, 5) * 2
+    playerCount = random.randint(2, 4) * 2
     gameDict = {
         'id': 'debug',
         'players': allPlayers[0:playerCount],
-        'phrasesPerPlayer': random.randint(2, 10),
+        'phrasesPerPlayer': random.randint(2, 3),
         'secondsPerTurn': random.randint(10, 60),
         'videoURL': 'vid' + randomString() }
     return gameDict
