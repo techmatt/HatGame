@@ -120,19 +120,12 @@ def getParam(requestJSON, param, isList=False, isInt=False, isString=False):
 def retrieveGameList():
     return jsonify({'games' : list(activeGames.keys())})
 
-@app.route('/api/gamestate', methods=['GET'])
-def retrieveGameState():
-    requestJSON = request.get_json()
+@app.route('/api/gamestate/<gameId>', methods=['GET'])
+def retrieveGameState(gameId):
     try:
-        gameID = getParam(requestJSON, 'id')
-    except ParamError as err:
-        return ErrorResponse(err)
-
-    try:
-        game = activeGames[gameID]
+        game = activeGames[gameId];
     except KeyError as err:
         return ErrorResponse(err)
-
     return jsonify(game.getStateDict())
 
 @app.route('/api/newgame', methods=['POST'])
@@ -186,6 +179,7 @@ def recordPhrases(gameID, playerID):
         return ErrorResponse(err)
 
     try:
+        print("Got phrases from player {}: {}".format(playerID, phrases))
         game.recordPlayerPhrases(playerID, phrases)
     except GameError as err:
         return ErrorResponse(err)

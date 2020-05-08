@@ -82,10 +82,10 @@ def testInvalidCalls(validGameID):
     processPostRequest(URLBase + 'games/badGameID/badPlayerID/recordphrases', json=makeRandomPhraseDict(5))
 
     # get state of an invalid game
-    gameState = processGetRequest(URLBase + 'api/gamestate', json={'id' : 'badGameID'})
+    gameState = processGetRequest(URLBase + 'api/gamestate' + 'badGameID')
 
     # get valid game state
-    gameState = processGetRequest(URLBase + 'api/gamestate', json={'id' : validGameID})
+    gameState = processGetRequest(URLBase + 'api/gamestate/'+ validGameID)
     gameURLBase = URLBase + 'games/' + validGameID + '/'
     players = gameState['players']
     phrasesPerPlayer = gameState['phrasesPerPlayer']
@@ -98,7 +98,7 @@ def testInvalidCalls(validGameID):
     print('invalid calls test passed')
 
 def createValidPhrases(gameID):
-    gameState = processGetRequest(URLBase + 'api/gamestate', json={'id' : gameID})
+    gameState = processGetRequest(URLBase + 'api/gamestate/'+ gameID)
     gameURLBase = URLBase + 'games/' + gameID + '/'
     players = gameState['players']
     phrasesPerPlayer = gameState['phrasesPerPlayer']
@@ -112,14 +112,14 @@ def createValidPhrases(gameID):
     print('valid phrases created')
 
 def verifyPhase(gameID, targetMainPhase, targetSubPhase):
-    gameState = processGetRequest(URLBase + 'api/gamestate', json={'id' : gameID})
+    gameState = processGetRequest(URLBase + 'api/gamestate/'+ gameID)
     if targetMainPhase != None and gameState['mainPhase'] != targetMainPhase:
         print('unexpected main phase:', gameState['mainPhase'], targetMainPhase)
     if gameState['subPhase'] != targetSubPhase:
         print('unexpected subphase:', gameState['subPhase'], targetSubPhase)
 
 def printScores(gameID):
-    gameState = processGetRequest(URLBase + 'api/gamestate', json={'id' : gameID})
+    gameState = processGetRequest(URLBase + 'api/gamestate/'+ gameID)
     scoreA = gameState['scores'][0]
     scoreB = gameState['scores'][1]
     total = scoreA + scoreB
@@ -128,7 +128,7 @@ def printScores(gameID):
     print('team scores:', scoreA, scoreB, total, perPlayer)
 
 def simulateValidPlayerTurn(gameID):
-    gameState = processGetRequest(URLBase + 'api/gamestate', json={'id' : gameID})
+    gameState = processGetRequest(URLBase + 'api/gamestate/'+ gameID)
     gameURLBase = URLBase + 'games/' + gameID + '/'
     players = gameState['players']
     hat = gameState['hat']
@@ -138,7 +138,7 @@ def simulateValidPlayerTurn(gameID):
     processPostRequest(gameURLBase + players[activePlayerIdx] + '/startturn', json=None)
     verifyPhase(newGameID, None, 'GameSubPhase.Started')
 
-    #print(processGetRequest(URLBase + 'api/gamestate', json={'id' : gameID}))
+    #print(processGetRequest(URLBase + 'api/gamestate/'+ gameID))
     
     processPostRequest(gameURLBase + players[activePlayerIdx] + '/endturn', json=None)
     verifyPhase(newGameID, None, 'GameSubPhase.ConfirmingPhrases')
@@ -148,10 +148,10 @@ def simulateValidPlayerTurn(gameID):
     acceptedJson = {'acceptedPhrases' : randomAcceptedPhrases}
     processPostRequest(gameURLBase + players[activePlayerIdx] + '/confirmphrases', json=acceptedJson)
     verifyPhase(newGameID, None, 'GameSubPhase.WaitForStart')
-    return processGetRequest(URLBase + 'api/gamestate', json={'id' : gameID})['mainPhase']
+    return processGetRequest(URLBase + 'api/gamestate/'+ gameID)['mainPhase']
 
 def simulateInvalidPlayerTurn(gameID):
-    gameState = processGetRequest(URLBase + 'api/gamestate', json={'id' : gameID})
+    gameState = processGetRequest(URLBase + 'api/gamestate/'+ gameID)
     gameURLBase = URLBase + 'games/' + gameID + '/'
     players = gameState['players']
     hat = gameState['hat']
