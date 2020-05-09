@@ -9,9 +9,10 @@ const FAKE_STATE_WRITING = {
     'Zebra',
   ],
   secondsPerTurn: 7,
-  activePlayerIdx: 3,
+  activePlayerIdx: -1,
   phrasesPerPlayer: 3,
   players: ['matt', 'amanda', 'graham', 'peter'], 
+  playerHasCompletedPhrases: [true, false, true, false],
   scores: [40, 25],
   videoURL: 'https://zoom.com',
 };
@@ -36,15 +37,17 @@ const FAKE_STATE_OTHER_PLAYER_STARTED = {
 };
 
 //FAKE_STATE = FAKE_STATE_OTHER_PLAYER_STARTED;
-//FAKE_STATE = FAKE_STATE_WRITING;
-FAKE_STATE = FAKE_STATE_START_ACTIVE_PLAYER;
+FAKE_STATE = FAKE_STATE_WRITING;
+//FAKE_STATE = FAKE_STATE_START_ACTIVE_PLAYER;
 const USE_FAKE_STATE = (typeof FAKE_STATE !== 'undefined');
 const e = React.createElement;
 
+const textIndicatingPlayerIsWriting = ' - writing'; // ✍️
 // Displays the list of players, with css to indicate the active player
 // props:
 //   players - player list
-//   activePlayerIdx - active player to highlight
+//   activePlayerIdx - active player to highlight, or -1 for no hilight
+//   playerHasCompletedPhrases - list of bools indicating player is done writing phrases
 function PlayerList(props) {
   console.log("Rendering PlayerList with props %o", props);
   if(typeof props.players == 'undefined') {
@@ -62,7 +65,7 @@ function PlayerList(props) {
             {key: player}, 
             e('td', 
             {className: `${playerStatus}_player_in_list`},
-            player))
+            player + (props.playerHasCompletedPhrases[i] ? '' : textIndicatingPlayerIsWriting)))
           }
         )
       )
@@ -351,8 +354,12 @@ class HatGameApp extends React.Component {
     {acceptedPhrases: phrases});
   }
 
+  viewingPlayerIndex() {
+    return this.state.players.indexOf(this.props.player);
+  }
+
   isItMyTurn() {
-    const viewingPlayerIndex = this.state.players.indexOf(this.props.player);
+    const viewingPlayerIndex = this.viewingPlayerIndex();
     if (viewingPlayerIndex == -1) {
       const message = (
         `Game is in a weird state where viewing player ${this.props.player} ` + 
@@ -364,6 +371,28 @@ class HatGameApp extends React.Component {
     console.log("index of player %o is %o; current player index is %o",
       this.state.players, viewingPlayerIndex, this.state.activePlayerIdx);
     return viewingPlayerIndex == this.state.activePlayerIdx;
+  }
+
+  renderInWritePhase() {
+    const viewingPlayerIsDoneWriting = this.state.playerHasCompletedPhrases[this.viewingPlayerIndex()];
+    console.log("Viewing player index %o, list %o",
+      this.viewingPlayerIndex(), this.state.playerHasCompletedPhrases);
+    
+    if (viewingPlayerIsDoneWriting) {
+      return e(
+        'div',
+        null,
+        'Waiting for everyone to finish writing'
+      );
+    } else {
+      return e(
+        PhraseListCreator,
+        {
+          phraseCount: this.state.phrasesPerPlayer,
+          onPhraseListCreation: this.handlePhrasesCreation.bind(this),
+        }
+      );
+    }
   }
 
   renderWhenWaitingForStart() {
@@ -463,13 +492,7 @@ class HatGameApp extends React.Component {
         );
       case
         'GameMainPhase.Write':
-        return e(
-          PhraseListCreator,
-          {
-            phraseCount: this.state.phrasesPerPlayer,
-            onPhraseListCreation: this.handlePhrasesCreation.bind(this),
-          }
-        );
+        return this.renderInWritePhase();
       case 'GameMainPhase.MultiWord':
       case 'GameMainPhase.SingleWord':
       case 'GameMainPhase.Charade':
@@ -495,7 +518,8 @@ class HatGameApp extends React.Component {
       e(PlayerList,
         {
           players: this.state.players,
-          activePlayerIdx: this.state.activePlayerIdx
+          activePlayerIdx: this.state.activePlayerIdx,
+          playerHasCompletedPhrases: this.state.playerHasCompletedPhrases,
         }
       ),
       this.renderPhaseSpecificUI()
