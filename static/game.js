@@ -37,7 +37,7 @@ const FAKE_STATE_OTHER_PLAYER_STARTED = {
 };
 
 //FAKE_STATE = FAKE_STATE_OTHER_PLAYER_STARTED;
-FAKE_STATE = FAKE_STATE_WRITING;
+// FAKE_STATE = FAKE_STATE_WRITING;
 //FAKE_STATE = FAKE_STATE_START_ACTIVE_PLAYER;
 const USE_FAKE_STATE = (typeof FAKE_STATE !== 'undefined');
 const e = React.createElement;
@@ -295,6 +295,7 @@ class HatGameApp extends React.Component {
     this.postData(
       `/games/${this.props.gameId}/${this.props.player}/recordphrases`,
     {phrases: phrases});
+    this.getStateFromServer();
   }
   
   onWordClicked(word) {
@@ -323,6 +324,7 @@ class HatGameApp extends React.Component {
     });
     //return responsePromise.then(r => r.json()); // parses JSON response into native JavaScript objects
     responsePromise.then(r => console.log(`server response: ${r}`));
+    this.getStateFromServer();
   }
   /*
   postData(endpoint, data) {
