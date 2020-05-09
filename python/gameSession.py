@@ -74,8 +74,10 @@ class GameSession:
     def getStateDict(self):
         result = {}
         playerList = []
+        phraseCompleteList = []
         for x in self.players:
             playerList.append(x.id)
+            phraseCompleteList.append(len(x.phrases) == self.phrasesPerPlayer)
 
         secondsRemaining = -1.0
         if self.turnStartTime is not None:
@@ -86,6 +88,7 @@ class GameSession:
         result['phrasesPerPlayer'] = self.phrasesPerPlayer
         result['secondsPerTurn'] = self.secondsPerTurn
         result['players'] = playerList #list(map(lambda x: x.id, self.players))
+        result['playerHasCompletedPhrases'] = phraseCompleteList
         result['hat'] = self.phrasesInHat
         result['mainPhase'] = str(self.mainPhase)
         result['subPhase'] = str(self.subPhase)
