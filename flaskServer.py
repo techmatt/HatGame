@@ -169,6 +169,7 @@ def recordPhrases(gameID, playerID):
     try:
         game = activeGames[gameID]
     except KeyError as err:
+        traceback.print_exc()
         return ErrorResponse(err)
 
     requestJSON = request.get_json()
@@ -182,6 +183,7 @@ def recordPhrases(gameID, playerID):
         print("Got phrases from player {}: {}".format(playerID, phrases))
         game.recordPlayerPhrases(playerID, phrases)
     except GameError as err:
+        traceback.print_exc()
         return ErrorResponse(err)
     game.signalRefresh()
     return 'phrases recorded'
@@ -194,11 +196,13 @@ def startTurn(gameID, playerID):
     try:
         game = activeGames[gameID]
     except KeyError as err:
+        traceback.print_exc()
         return ErrorResponse(err)
 
     try:
         game.startPlayerTurn(playerID)
     except GameError as err:
+        traceback.print_exc()
         return ErrorResponse(err)
     game.signalRefresh()
     return 'turn started'
@@ -211,11 +215,13 @@ def endTurn(gameID, playerID):
     try:
         game = activeGames[gameID]
     except KeyError as err:
+        traceback.print_exc()
         return ErrorResponse(err)
 
     try:
         game.endPlayerTurn(playerID)
     except GameError as err:
+        traceback.print_exc()
         return ErrorResponse(err)
     game.signalRefresh()
     return 'turn ended'
@@ -228,20 +234,69 @@ def confirmPhrases(gameID, playerID):
     try:
         game = activeGames[gameID]
     except KeyError as err:
+        traceback.print_exc()
         return ErrorResponse(err)
 
     requestJSON = request.get_json()
     try:
         acceptedPhrases = getParam(requestJSON, 'acceptedPhrases', isList=True)
     except ParamError as err:
+        traceback.print_exc()
         return ErrorResponse(err)
 
     try:
         game.confirmPhrases(playerID, acceptedPhrases)
     except GameError as err:
+        traceback.print_exc()
         return ErrorResponse(err)
     game.signalRefresh()
     return 'phrases recorded'
+
+# Create a few small deterministic games for UI testing
+example_game_messages = []
+def createDebugWriteGame():
+    """  Create a game where 2 of 4 players have finished writing
+    phrases"""
+    game_id='debug_write_phase'
+    game = GameSession(
+        id=game_id, 
+        playerIDs=['graham', 'matt', 'nik', 'peter'],
+        phrasesPerPlayer=3, 
+        secondsPerTurn=7,
+        videoURL='http://zoom.com')
+    
+    game.recordPlayerPhrases('graham', ['The Axiom of Choice', 'Uncountable', 'Ripple Shuffle'])
+    game.recordPlayerPhrases('nik', ['Volcano', 'Google', 'Mitch McConnell'])
+    activeGames[game_id] = game
+    print('created game ' + game_id)
+    example_game_messages.append('Example page writing words: http://127.0.0.1:5000/games/{}/peter'.format(game_id))
+
+def createDebugMultiWordGame():
+    """  Create a game in the MultiWord phase, right after words composed"""
+    game_id='debug_multi_word_phase'
+    game = GameSession(
+        id=game_id, 
+        playerIDs=['graham', 'matt', 'nik', 'peter'],
+        phrasesPerPlayer=3, 
+        secondsPerTurn=7,
+        videoURL='http://zoom.com')
+    
+    game.recordPlayerPhrases('graham', ['The Axiom of Choice', 'Uncountable', 'Ripple Shuffle'])
+    game.recordPlayerPhrases('nik', ['Volcano', 'Google', 'Mitch McConnell'])
+    game.recordPlayerPhrases('matt', ['Adobe', 'Entropy Sphere', 'Heat Death'])
+    game.recordPlayerPhrases('peter', ['Cat', 'Stripe', 'Optimization'])
+    # For reproducibility, let''s make it Peter's turn and link to that
+    game.activePlayerIdx = 3
+    activeGames[game_id] = game
+    print('created game ' + game_id)
+    example_game_messages.append('Example page to start a turn: http://127.0.0.1:5000/games/{}/peter'.format(game_id))
+# TODO: Shold this be inside main?
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 # Always reload js files
+createDebugWriteGame()
+createDebugMultiWordGame()
+print('')
+for m in example_game_messages:
+    print(m)
 
 if __name__ == '__main__':
     print('running with multithreading')
