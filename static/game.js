@@ -37,7 +37,7 @@ const FAKE_STATE_OTHER_PLAYER_STARTED = {
 
 //FAKE_STATE = FAKE_STATE_OTHER_PLAYER_STARTED;
 //FAKE_STATE = FAKE_STATE_WRITING;
-//FAKE_STATE = FAKE_STATE_START_ACTIVE_PLAYER;
+FAKE_STATE = FAKE_STATE_START_ACTIVE_PLAYER;
 const USE_FAKE_STATE = (typeof FAKE_STATE !== 'undefined');
 const e = React.createElement;
 
@@ -199,12 +199,14 @@ class CountdownTimer extends React.Component {
 // Lets the current player confirm the list of words they got
 class WordListConfirmer extends React.Component {
   // props:
-  //   words - list of words to confirm
+  //   wordsDefaultingToChecked - default checked list of words to confirm
+  //   wordsDefaultingToUnchecked - default checked list of words to confirm
   //   callbackAfterConfirmation - function that takes confirmedWords
   constructor(props) {
     super(props);
-    console.log("creating a WordListConfirmer with words %o", props.words);
-    this.wordCheckboxRefs = props.words.map(w => React.createRef());
+    this.words = props.wordsDefaultingToChecked.concat(props.wordsDefaultingToUnchecked);
+    console.log("creating a WordListConfirmer with words %o", this.words);
+    this.wordCheckboxRefs = this.words.map(w => React.createRef());
     console.log("refs %o", this.wordCheckboxRefs);
   }
 
@@ -212,7 +214,7 @@ class WordListConfirmer extends React.Component {
     event.preventDefault();
     const confirmedWords = [];
     console.log("refs %o", this.wordCheckboxRefs);
-    this.props.words.forEach(
+    this.words.forEach(
       (word, i) => {
         const checkbox = this.wordCheckboxRefs[i].current;
         if (checkbox.checked) {
@@ -225,17 +227,18 @@ class WordListConfirmer extends React.Component {
   }
 
   render() {
+    const countDefaultingChecked = this.props.wordsDefaultingToChecked.length;
     return e(
       'form',
       { onSubmit: this.handleSubmit.bind(this) },
-      this.props.words.map(
+      this.words.map(
         (word, i) =>
           e('div',
             { key: word },
             e('input',
               {
                 type: "checkbox",
-                defaultChecked: "true",
+                defaultChecked: (i < countDefaultingChecked),
                 ref: this.wordCheckboxRefs[i],
                 name: "checkbox " + word
               }
@@ -417,7 +420,8 @@ class HatGameApp extends React.Component {
     if (this.isItMyTurn()) {
       return e(WordListConfirmer,
         {
-          words: this.state.wordsClicked,
+          wordsDefaultingToChecked: this.state.wordsClicked,
+          wordsDefaultingToUnchecked: this.state.hat.slice(0, 2),
           callbackAfterConfirmation: this.handlePhraseConfirmation.bind(this),
         }
       )
