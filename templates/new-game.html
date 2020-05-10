@@ -6,25 +6,13 @@
 	<body>
 		{% include 'header.html' %}
 		<section id="main">
-			<div id="addPlayers" class="flex-window">
-				<h1>Players</h1>
+			<div id="players" class="flex-window">
+				<h1>Players (<span id="playerCount">1</span>)</h1>
 				<div class="input-section">
 					<input class="name-text" type="text"></input>
 					<button class="remove inactive">x</button>
 				</div>
-				<div class="input-section">
-					<input class="name-text" type="text"></input>
-					<button class="remove inactive">x</button>
-				</div>
-				<div class="input-section">
-					<input class="name-text" type="text"></input>
-					<button class="remove inactive">x</button>
-				</div>
-				<div class="input-section">
-					<input class="name-text" type="text"></input>
-					<button class="remove inactive">x</button>
-				</div>
-				<button class="add inactive">Add Player</button>
+				<button class="add">Add Player</button>
 			</div>
 			<div id="optionList" class="flex-window">
 				<h1>Options</h1>

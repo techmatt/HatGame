@@ -9,6 +9,9 @@ body {
     margin: 0em;
     font-family: arial;
     padding: 5px;
+    max-width: 1000px;
+    margin: auto;
+
 }
 #header { 
     background-color: #673AB7;
@@ -77,6 +80,8 @@ img#logo {
 }
 .input-section {
     margin-bottom: .3em;
+    display: flex;
+    justify-content: space-between;
 }
 input {
 	padding-right: 1em;
@@ -104,6 +109,11 @@ button, .button {
 	border: 0px;
 	min-width: 5em;
 	cursor: pointer;
+}
+button.remove {
+	background-color: #e00000;
+	max-width: 4em;
+	min-width: 2em;
 }
 #footer button {
     margin: auto;

@@ -1,48 +1,8 @@
 
-const FAKE_STATE_WRITING = {
-  mainPhase: 'GameMainPhase.Write',
-  subPhase: 'GameSubPhase.WaitForStart',
-  hat: [
-    'Cat',
-    'Dog',
-    'Elephant',
-    'Zebra',
-  ],
-  secondsPerTurn: 7,
-  activePlayerIdx: -1,
-  phrasesPerPlayer: 3,
-  players: ['matt', 'amanda', 'graham', 'peter'], 
-  playerHasCompletedPhrases: [true, false, true, false],
-  scores: [40, 25],
-  videoURL: 'https://zoom.com',
-};
-FAKE_STATE_START_ACTIVE_PLAYER = {...FAKE_STATE_WRITING, ...{mainPhase: 'GameMainPhase.Charade'}};
-
-const FAKE_STATE_OTHER_PLAYER_STARTED = {
-  mainPhase: 'GameMainPhase.Charade',
-  subPhase: 'GameSubPhase.Started',
-  hat: [
-    'Cat',
-    'Dog',
-    'Elephant',
-    'Zebra',
-  ],
-  secondsPerTurn: 30,
-  secondsRemaining: 5,
-  activePlayerIdx: 2,
-  phrasesPerPlayer: 3,
-  players: ['matt', 'amanda', 'graham', 'peter'], 
-  scores: [40, 25],
-  videoURL: 'https://zoom.com',
-};
-
-//FAKE_STATE = FAKE_STATE_OTHER_PLAYER_STARTED;
-// FAKE_STATE = FAKE_STATE_WRITING;
-//FAKE_STATE = FAKE_STATE_START_ACTIVE_PLAYER;
-const USE_FAKE_STATE = (typeof FAKE_STATE !== 'undefined');
 const e = React.createElement;
 
 const textIndicatingPlayerIsWriting = ' - writing'; // ✍️
+
 // Displays the list of players, with css to indicate the active player
 // props:
 //   players - player list
@@ -209,7 +169,6 @@ class WordListConfirmer extends React.Component {
     this.words = props.wordsDefaultingToChecked.concat(props.wordsDefaultingToUnchecked);
     console.log("creating a WordListConfirmer with words %o", this.words);
     this.wordCheckboxRefs = this.words.map(w => React.createRef());
-    console.log("refs %o", this.wordCheckboxRefs);
   }
 
   handleSubmit(event) {
@@ -242,11 +201,11 @@ class WordListConfirmer extends React.Component {
                 type: "checkbox",
                 defaultChecked: (i < countDefaultingChecked),
                 ref: this.wordCheckboxRefs[i],
-                name: "checkbox " + word
+                id: "checkbox " + word
               }
             ),
             e('label',
-              null,
+              {for: "checkbox " + word},
               word)
           )
       ),
@@ -260,8 +219,8 @@ class WordListConfirmer extends React.Component {
 // Main game
 class HatGameApp extends React.Component {
   // props:
-  //  player - the name of the player viewing this app
-  // gameId - the id of the game
+  //   player - the name of the player viewing this app
+  //   gameId - the id of the game
   constructor(props) {
     super(props)
     this.state = {
@@ -272,11 +231,8 @@ class HatGameApp extends React.Component {
   }
 
   componentDidMount() {
-    if (USE_FAKE_STATE) {
-       this.setState(FAKE_STATE);
-    } else {
-      this.getStateFromServer();
-    }
+    this.getStateFromServer();
+    this.startListeningForServerUpdates();
   }
 
   getStateFromServer() {
@@ -289,27 +245,35 @@ class HatGameApp extends React.Component {
 			});
   }
 
-  handleTurnStart() {
+  startListeningForServerUpdates() {
+    var source = new EventSource(`/api/stream/${this.props.gameId}/${this.props.player}/events`);
+    source.onmessage = (event => {
+      console.log("Server told client to update.  Loading state from server.");
+      this.getStateFromServer();
+      });
+    }
+
+    handlePhrasesCreation(phrases) {
+      console.log("telling server we created phrases %o", phrases);
+      this.postData(
+        `/games/${this.props.gameId}/${this.props.player}/recordphrases`,
+      {phrases: phrases});
+      this.getStateFromServer();
+    }
+  
+    handleTurnStart() {
     const endpoint = `/games/${this.props.gameId}/${this.props.player}/startturn`;
     this.postData(endpoint, null);
-    this.getStateFromServer();
-    //this.setState({subPhase: 'GameSubPhase.Started'});
-  }
-
-  handlePhrasesCreation(phrases) {
-    console.log("telling server we created phrases %o", phrases);
-    this.postData(
-      `/games/${this.props.gameId}/${this.props.player}/recordphrases`,
-    {phrases: phrases});
+    // wordsClicked is tracked locally; initially its empty
+    this.setState({
+      wordsClicked: []
+    });
     this.getStateFromServer();
   }
   
   onWordClicked(word) {
     this.setState((state, props) => ({
-      hat: state.hat.filter(w => w !== word),
       wordsClicked: state.wordsClicked.concat([word]),
-      // update the subPhase if we just clicked the last word
-      subPhase: (state.hat.length == 1 ? 'GameSubPhase.ConfirmingPhrases' : state.subPhase)
     }));
   }
 
@@ -322,53 +286,7 @@ class HatGameApp extends React.Component {
   handleTimerExpiration() {
     console.log("Turn ended due to timer");
     this.endTurn();
-    //this.setState({
-    //  subPhase: 'GameSubPhase.ConfirmingPhrases'
-    //});
   }
-  
-  postData(endpoint, data) {
-    var responsePromise;
-    if (data) {
-      responsePromise = fetch("../../.." + endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: (data ? JSON.stringify(data) : null)
-      });
-    } else {
-      responsePromise = fetch("../../.." + endpoint, {
-        method: 'POST',
-      });
-    }
-    //return responsePromise.then(r => r.json()); // parses JSON response into native JavaScript objects
-    responsePromise.then(r => r.text())
-      .then(message => console.log(`server response: ${message}`));
-    this.getStateFromServer();
-  }
-  /*
-  postData(endpoint, data) {
-    console.log(`posting to %o with data %o`, endpoint, data);
-    $.ajax({
-      type: "POST",
-      url: "../../.." + endpoint,
-      data: JSON.stringify(data),
-      contentType: "application/json; charset=utf-8",
-      dataType: "json",
-      success: function(response) {
-        if(response.error) {
-          alert(response.error);
-        } else {
-          console.log(`server response ${response}`)
-        }
-      },
-      failure: function(xhr, status, error) {
-        alert(`Could not connect with server. error: ${error}`);
-      }
-    });	
-  }
-  */
 
   handlePhraseConfirmation(phrases) {
     console.log("telling server we confirmed words %o", phrases);
@@ -437,9 +355,16 @@ class HatGameApp extends React.Component {
         }
   }
 
+  unclickedHatWords() {
+    return this.state.hat.filter(w => !this.state.wordsClicked.includes(w));
+  }
+
   renderWhenStarted() {
     if (this.isItMyTurn()) {
-      const wordsToRender = this.state.hat.slice(0, 2);
+      if (this.state.wordsClicked.length == this.state.hat.length) {
+        this.endTurn();
+      }
+      const wordsToRender = this.unclickedHatWords().slice(0, 2);
       return e(
         'div',
         null,
@@ -471,7 +396,7 @@ class HatGameApp extends React.Component {
       return e(WordListConfirmer,
         {
           wordsDefaultingToChecked: this.state.wordsClicked,
-          wordsDefaultingToUnchecked: this.state.hat.slice(0, 2),
+          wordsDefaultingToUnchecked: this.unclickedHatWords().slice(0, 2),
           callbackAfterConfirmation: this.handlePhraseConfirmation.bind(this),
         }
       )
@@ -522,7 +447,7 @@ class HatGameApp extends React.Component {
         return e(
           'div',
           { className: "game_done_text" },
-          'Game complete, thanks for playing!'
+          `Game complete, thanks for playing! Scores: ${this.state.scores}`
         );
       default:
         return e(
@@ -536,6 +461,10 @@ class HatGameApp extends React.Component {
     return e(
       'div',
       null,
+      e('div',
+        {className: 'main_phase_text'},
+        this.state.mainPhase
+      ),
       e(PlayerList,
         {
           players: this.state.players,
@@ -545,6 +474,27 @@ class HatGameApp extends React.Component {
       ),
       this.renderPhaseSpecificUI()
     );
+  }
+
+  postData(endpoint, data) {
+    var responsePromise;
+    if (data) {
+      responsePromise = fetch("../../.." + endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: (data ? JSON.stringify(data) : null)
+      });
+    } else {
+      responsePromise = fetch("../../.." + endpoint, {
+        method: 'POST',
+      });
+    }
+    //return responsePromise.then(r => r.json()); // parses JSON response into native JavaScript objects
+    responsePromise.then(r => r.text())
+      .then(message => console.log(`server response: ${message}`));
+    this.getStateFromServer();
   }
 }
 
@@ -556,3 +506,4 @@ ReactDOM.render(e(
   gameId: appElement.getAttribute("data-game-id")}
   ), 
   appElement);
+
