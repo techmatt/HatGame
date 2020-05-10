@@ -87,14 +87,18 @@
 	
 	// update the player count
     let updatePlayerCount = function() {
-        let playerCount = playerSection.children(".input-section").length;
+        playerCount = playerSection.children(".input-section").length;
         playerCountDisplay.text(playerCount);
     }
 	
 	// removePlayer function: removes a player from the list
 	let removePlayer = function() {
-		this.parentNode.remove();
-		updatePlayerCount();
+		if( playerCount > minPlayers ) {
+			this.parentNode.remove();
+			updatePlayerCount();
+		} else {
+			alert("The minimum number of players is " + minPlayers + ".");
+		}
 	}
 	
 	// initialize removePlayer function for template
@@ -102,14 +106,17 @@
 
 	// newPlayer function: adds a new player to the list
 	let newPlayer = function() {
-		if( playerCount <= maxPlayers) {
-					playerTemplate.clone(true).insertBefore(addPlayerButton);
+		if( playerCount < maxPlayers ) {
+			playerTemplate.clone(true).insertBefore(addPlayerButton);
+			updatePlayerCount();
+		} else {
+			alert("The maximum number of players is " + maxPlayers + ".");
 		}
-        updatePlayerCount();
+        
 	}
 
 	// update the number of players to the expected default
-	for(gix = playerCount; gix < minPlayers; gix+=1) {
+	for( gix = playerCount; gix < minPlayers; gix+=1 ) {
 		newPlayer();
 	} 
 
