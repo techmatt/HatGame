@@ -15,7 +15,11 @@ class ParamError(Exception):
     pass
 
 def ErrorResponse(obj):
-    return Response(str(obj), status=400, mimetype='application/text')
+    result = {}
+    result['error'] = str(obj)
+    return jsonify(result)
+    #return Response(jsonify(result), status=200, mimetype='application/json')
+    #return Response(str(obj), status=400, mimetype='application/text')
 
 activeGames = {}
 
