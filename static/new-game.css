@@ -1,4 +1,6 @@
 /* styles for the new-game page */
 .name-text {
 	width: 100%;
+	margin-right: 5px;
+	min-height: 2.5em;
 }
