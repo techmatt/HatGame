@@ -182,7 +182,6 @@ class CountdownTimer extends React.Component {
   decrementSecondsRemaining() {
     if (this.state.secondsRemaining <= 1.0 && this.state.secondsRemaining > 0.0) {
       this.props.timerExpirationCallback();
-      this.props.timerExpirationCallback();
     } else {
       this.setState((state, props) => ({
         secondsRemaining: state.secondsRemaining - 1
@@ -290,6 +289,13 @@ class HatGameApp extends React.Component {
 			});
   }
 
+  handleTurnStart() {
+    const endpoint = `/games/${this.props.gameId}/${this.props.player}/startturn`;
+    this.postData(endpoint, null);
+    this.getStateFromServer();
+    //this.setState({subPhase: 'GameSubPhase.Started'});
+  }
+
   handlePhrasesCreation(phrases) {
     console.log("telling server we created phrases %o", phrases);
     this.postData(
@@ -307,23 +313,38 @@ class HatGameApp extends React.Component {
     }));
   }
 
+  endTurn() {
+    const endpoint = `/games/${this.props.gameId}/${this.props.player}/endturn`;
+    this.postData(endpoint, null);
+    this.getStateFromServer();
+  }
+
   handleTimerExpiration() {
     console.log("Turn ended due to timer");
-    this.setState({
-      subPhase: 'GameSubPhase.ConfirmingPhrases'
-    });
+    this.endTurn();
+    //this.setState({
+    //  subPhase: 'GameSubPhase.ConfirmingPhrases'
+    //});
   }
   
   postData(endpoint, data) {
-     const responsePromise = fetch("../../.." + endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    });
+    var responsePromise;
+    if (data) {
+      responsePromise = fetch("../../.." + endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: (data ? JSON.stringify(data) : null)
+      });
+    } else {
+      responsePromise = fetch("../../.." + endpoint, {
+        method: 'POST',
+      });
+    }
     //return responsePromise.then(r => r.json()); // parses JSON response into native JavaScript objects
-    responsePromise.then(r => console.log(`server response: ${r}`));
+    responsePromise.then(r => r.text())
+      .then(message => console.log(`server response: ${message}`));
     this.getStateFromServer();
   }
   /*
@@ -402,11 +423,9 @@ class HatGameApp extends React.Component {
       return e('div', null,
           e('button',
             {className: 'start_button',
-             onClick: () => {
-                this.setState({subPhase: 'GameSubPhase.Started'});
-              }
+             onClick: this.handleTurnStart.bind(this)
              },
-              'Start'
+            'Start'
            )
          )
         } else {
