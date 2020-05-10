@@ -1,45 +1,4 @@
 
-const FAKE_STATE_WRITING = {
-  mainPhase: 'GameMainPhase.Write',
-  subPhase: 'GameSubPhase.WaitForStart',
-  hat: [
-    'Cat',
-    'Dog',
-    'Elephant',
-    'Zebra',
-  ],
-  secondsPerTurn: 7,
-  activePlayerIdx: -1,
-  phrasesPerPlayer: 3,
-  players: ['matt', 'amanda', 'graham', 'peter'], 
-  playerHasCompletedPhrases: [true, false, true, false],
-  scores: [40, 25],
-  videoURL: 'https://zoom.com',
-};
-FAKE_STATE_START_ACTIVE_PLAYER = {...FAKE_STATE_WRITING, ...{mainPhase: 'GameMainPhase.Charade'}};
-
-const FAKE_STATE_OTHER_PLAYER_STARTED = {
-  mainPhase: 'GameMainPhase.Charade',
-  subPhase: 'GameSubPhase.Started',
-  hat: [
-    'Cat',
-    'Dog',
-    'Elephant',
-    'Zebra',
-  ],
-  secondsPerTurn: 30,
-  secondsRemaining: 5,
-  activePlayerIdx: 2,
-  phrasesPerPlayer: 3,
-  players: ['matt', 'amanda', 'graham', 'peter'], 
-  scores: [40, 25],
-  videoURL: 'https://zoom.com',
-};
-
-//FAKE_STATE = FAKE_STATE_OTHER_PLAYER_STARTED;
-// FAKE_STATE = FAKE_STATE_WRITING;
-//FAKE_STATE = FAKE_STATE_START_ACTIVE_PLAYER;
-const USE_FAKE_STATE = (typeof FAKE_STATE !== 'undefined');
 const e = React.createElement;
 
 const textIndicatingPlayerIsWriting = ' - writing'; // ✍️
@@ -272,12 +231,8 @@ class HatGameApp extends React.Component {
   }
 
   componentDidMount() {
-    if (USE_FAKE_STATE) {
-       this.setState(FAKE_STATE);
-    } else {
-      this.getStateFromServer();
-      this.startListeningForServerUpdates()
-    }
+    this.getStateFromServer();
+    this.startListeningForServerUpdates();
   }
 
   getStateFromServer() {
