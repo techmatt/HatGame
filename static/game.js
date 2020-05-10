@@ -276,6 +276,7 @@ class HatGameApp extends React.Component {
        this.setState(FAKE_STATE);
     } else {
       this.getStateFromServer();
+      this.startListeningForServerUpdates()
     }
   }
 
@@ -288,6 +289,14 @@ class HatGameApp extends React.Component {
 				this.setState((state, props) => ({...this.state, ...data}));
 			});
   }
+
+  startListeningForServerUpdates() {
+    var source = new EventSource(`/api/stream/${this.props.gameId}/${this.props.player}/events`);
+    source.onmessage = (event => {
+      console.log("Server told client to update.  Loading state from server.");
+      this.getStateFromServer();
+      });
+    }
 
   handleTurnStart() {
     const endpoint = `/games/${this.props.gameId}/${this.props.player}/startturn`;
