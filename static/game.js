@@ -315,10 +315,8 @@ class HatGameApp extends React.Component {
   
   onWordClicked(word) {
     this.setState((state, props) => ({
-      hat: state.hat.filter(w => w !== word),
       wordsClicked: state.wordsClicked.concat([word]),
-      // update the subPhase if we just clicked the last word
-      subPhase: (state.hat.length == 1 ? 'GameSubPhase.ConfirmingPhrases' : state.subPhase)
+      
     }));
   }
 
@@ -446,9 +444,16 @@ class HatGameApp extends React.Component {
         }
   }
 
+  unclickedHatWords() {
+    return this.state.hat.filter(w => !this.state.wordsClicked.includes(w));
+  }
+
   renderWhenStarted() {
     if (this.isItMyTurn()) {
-      const wordsToRender = this.state.hat.slice(0, 2);
+      if (this.state.wordsClicked.length == this.state.hat.length) {
+        this.endTurn();
+      }
+      const wordsToRender = this.unclickedHatWords().slice(0, 2);
       return e(
         'div',
         null,
@@ -480,7 +485,7 @@ class HatGameApp extends React.Component {
       return e(WordListConfirmer,
         {
           wordsDefaultingToChecked: this.state.wordsClicked,
-          wordsDefaultingToUnchecked: this.state.hat.slice(0, 2),
+          wordsDefaultingToUnchecked: this.unclickedHatWords().slice(0, 2),
           callbackAfterConfirmation: this.handlePhraseConfirmation.bind(this),
         }
       )
