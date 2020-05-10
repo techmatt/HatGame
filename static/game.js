@@ -301,8 +301,11 @@ class HatGameApp extends React.Component {
   handleTurnStart() {
     const endpoint = `/games/${this.props.gameId}/${this.props.player}/startturn`;
     this.postData(endpoint, null);
+    // wordsClicked is tracked locally; initially its empty
+    this.setState({
+      wordsClicked: []
+    });
     this.getStateFromServer();
-    //this.setState({subPhase: 'GameSubPhase.Started'});
   }
 
   handlePhrasesCreation(phrases) {
@@ -316,7 +319,6 @@ class HatGameApp extends React.Component {
   onWordClicked(word) {
     this.setState((state, props) => ({
       wordsClicked: state.wordsClicked.concat([word]),
-      
     }));
   }
 
