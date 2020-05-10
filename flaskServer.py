@@ -1,6 +1,7 @@
 
 import traceback
 import sys
+import os
 from flask import Flask, request, Response, send_from_directory, render_template, jsonify, json
 from werkzeug.exceptions import BadRequestKeyError
 from collections import Iterable
@@ -87,7 +88,15 @@ def gamePortal(gameID):
 
 @app.route('/games/<gameId>/<playerId>/', methods=['GET'])
 def gamePlayerView(gameId, playerId):
-    return render_template("game.html", gameId=gameId, playerId=playerId)
+    # As a hack to get the browser to reaload the js on changes, append the last
+    # update time to requests
+    # See https://stackoverflow.com/a/54164514/537390
+    last_updated = str(os.path.getmtime('static/game.js'))
+    return render_template(
+        "game.html", 
+        gameId=gameId, 
+        playerId=playerId, 
+        last_updated=last_updated)
 
 #@app.route('/newGame<command>')
 #def show_user_profile(command):
@@ -262,7 +271,7 @@ def createDebugWriteGame():
         id=game_id, 
         playerIDs=['graham', 'matt', 'nik', 'peter'],
         phrasesPerPlayer=3, 
-        secondsPerTurn=7,
+        secondsPerTurn=3,
         videoURL='http://zoom.com')
     
     game.recordPlayerPhrases('graham', ['The Axiom of Choice', 'Uncountable', 'Ripple Shuffle'])
@@ -278,7 +287,7 @@ def createDebugMultiWordGame():
         id=game_id, 
         playerIDs=['graham', 'matt', 'nik', 'peter'],
         phrasesPerPlayer=3, 
-        secondsPerTurn=7,
+        secondsPerTurn=3,
         videoURL='http://zoom.com')
     
     game.recordPlayerPhrases('graham', ['The Axiom of Choice', 'Uncountable', 'Ripple Shuffle'])
@@ -291,7 +300,6 @@ def createDebugMultiWordGame():
     print('created game ' + game_id)
     example_game_messages.append('Example page to start a turn: http://127.0.0.1:5000/games/{}/peter'.format(game_id))
 # TODO: Shold this be inside main?
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0 # Always reload js files
 createDebugWriteGame()
 createDebugMultiWordGame()
 print('')
