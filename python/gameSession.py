@@ -46,8 +46,17 @@ class GameSession:
         self.secondsPerTurn = secondsPerTurn
         self.videoURL = videoURL
 
+        if phrasesPerPlayer < 2 or phrasesPerPlayer > 30:
+            raise GameError('phrases per player must be between 2 and 30') 
+
+        if secondsPerTurn < 5 or secondsPerTurn > 200:
+            raise GameError('turns must be between 5 and 200 seconds') 
+
         if len(playerIDs) < 4 or len(playerIDs) > 10:
             raise GameError('must have between 4 and 10 players: ' + playerIDs) 
+
+        if len(playerIDs) % 2 != 0:
+            raise GameError('must have an even number of players')
 
         self.players = []
         self.playersByID = {}
@@ -55,6 +64,11 @@ class GameSession:
         self.teams.append(Team(0))
         self.teams.append(Team(1))
         for idx, playerID in enumerate(playerIDs):
+            if len(playerID) <= 0:
+                raise GameError('all players must have a name')
+            if playerID in self.playersByID:
+                raise GameError('all player names must be unique')
+
             teamIdx = idx % 2
             player = Player(playerID, idx, teamIdx)
             self.players.append(player)
@@ -142,10 +156,18 @@ class GameSession:
             raise GameError(playerID + ' is not a valid player')
 
         player = self.playersByID[playerID]
+        
         if len(player.phrases) > 0:
             raise GameError(playerID + ' has already recorded phrases')
+
         if len(phrases) != self.phrasesPerPlayer:
             raise GameError('invalid number of phrases recorded: ' + str(len(phrases)))
+
+        for phrase in phrases:
+            if len(phrase) < 3:
+                raise GameError('phrases must contain at least 3 letters') 
+
+
         for phrase in phrases:
             player.phrases.append(phrase)
             self.allPhrases.append(phrase)

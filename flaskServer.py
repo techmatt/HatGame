@@ -271,7 +271,7 @@ def createDebugWriteGame():
         id=game_id, 
         playerIDs=['graham', 'matt', 'nik', 'peter'],
         phrasesPerPlayer=3, 
-        secondsPerTurn=3,
+        secondsPerTurn=30,
         videoURL='http://zoom.com')
     
     game.recordPlayerPhrases('graham', ['The Axiom of Choice', 'Uncountable', 'Ripple Shuffle'])
@@ -287,7 +287,7 @@ def createDebugMultiWordGame():
         id=game_id, 
         playerIDs=['graham', 'matt', 'nik', 'peter'],
         phrasesPerPlayer=3, 
-        secondsPerTurn=3,
+        secondsPerTurn=30,
         videoURL='http://zoom.com')
     
     game.recordPlayerPhrases('graham', ['The Axiom of Choice', 'Uncountable', 'Ripple Shuffle'])
