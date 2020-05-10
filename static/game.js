@@ -2,6 +2,7 @@
 const e = React.createElement;
 
 const textIndicatingPlayerIsWriting = ' - writing'; // ✍️
+
 // Displays the list of players, with css to indicate the active player
 // props:
 //   players - player list
@@ -168,7 +169,6 @@ class WordListConfirmer extends React.Component {
     this.words = props.wordsDefaultingToChecked.concat(props.wordsDefaultingToUnchecked);
     console.log("creating a WordListConfirmer with words %o", this.words);
     this.wordCheckboxRefs = this.words.map(w => React.createRef());
-    console.log("refs %o", this.wordCheckboxRefs);
   }
 
   handleSubmit(event) {
@@ -201,11 +201,11 @@ class WordListConfirmer extends React.Component {
                 type: "checkbox",
                 defaultChecked: (i < countDefaultingChecked),
                 ref: this.wordCheckboxRefs[i],
-                name: "checkbox " + word
+                id: "checkbox " + word
               }
             ),
             e('label',
-              null,
+              {for: "checkbox " + word},
               word)
           )
       ),
@@ -219,8 +219,8 @@ class WordListConfirmer extends React.Component {
 // Main game
 class HatGameApp extends React.Component {
   // props:
-  //  player - the name of the player viewing this app
-  // gameId - the id of the game
+  //   player - the name of the player viewing this app
+  //   gameId - the id of the game
   constructor(props) {
     super(props)
     this.state = {
@@ -253,21 +253,21 @@ class HatGameApp extends React.Component {
       });
     }
 
-  handleTurnStart() {
+    handlePhrasesCreation(phrases) {
+      console.log("telling server we created phrases %o", phrases);
+      this.postData(
+        `/games/${this.props.gameId}/${this.props.player}/recordphrases`,
+      {phrases: phrases});
+      this.getStateFromServer();
+    }
+  
+    handleTurnStart() {
     const endpoint = `/games/${this.props.gameId}/${this.props.player}/startturn`;
     this.postData(endpoint, null);
     // wordsClicked is tracked locally; initially its empty
     this.setState({
       wordsClicked: []
     });
-    this.getStateFromServer();
-  }
-
-  handlePhrasesCreation(phrases) {
-    console.log("telling server we created phrases %o", phrases);
-    this.postData(
-      `/games/${this.props.gameId}/${this.props.player}/recordphrases`,
-    {phrases: phrases});
     this.getStateFromServer();
   }
   
@@ -286,53 +286,7 @@ class HatGameApp extends React.Component {
   handleTimerExpiration() {
     console.log("Turn ended due to timer");
     this.endTurn();
-    //this.setState({
-    //  subPhase: 'GameSubPhase.ConfirmingPhrases'
-    //});
   }
-  
-  postData(endpoint, data) {
-    var responsePromise;
-    if (data) {
-      responsePromise = fetch("../../.." + endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: (data ? JSON.stringify(data) : null)
-      });
-    } else {
-      responsePromise = fetch("../../.." + endpoint, {
-        method: 'POST',
-      });
-    }
-    //return responsePromise.then(r => r.json()); // parses JSON response into native JavaScript objects
-    responsePromise.then(r => r.text())
-      .then(message => console.log(`server response: ${message}`));
-    this.getStateFromServer();
-  }
-  /*
-  postData(endpoint, data) {
-    console.log(`posting to %o with data %o`, endpoint, data);
-    $.ajax({
-      type: "POST",
-      url: "../../.." + endpoint,
-      data: JSON.stringify(data),
-      contentType: "application/json; charset=utf-8",
-      dataType: "json",
-      success: function(response) {
-        if(response.error) {
-          alert(response.error);
-        } else {
-          console.log(`server response ${response}`)
-        }
-      },
-      failure: function(xhr, status, error) {
-        alert(`Could not connect with server. error: ${error}`);
-      }
-    });	
-  }
-  */
 
   handlePhraseConfirmation(phrases) {
     console.log("telling server we confirmed words %o", phrases);
@@ -521,6 +475,27 @@ class HatGameApp extends React.Component {
       this.renderPhaseSpecificUI()
     );
   }
+
+  postData(endpoint, data) {
+    var responsePromise;
+    if (data) {
+      responsePromise = fetch("../../.." + endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: (data ? JSON.stringify(data) : null)
+      });
+    } else {
+      responsePromise = fetch("../../.." + endpoint, {
+        method: 'POST',
+      });
+    }
+    //return responsePromise.then(r => r.json()); // parses JSON response into native JavaScript objects
+    responsePromise.then(r => r.text())
+      .then(message => console.log(`server response: ${message}`));
+    this.getStateFromServer();
+  }
 }
 
 const appElement = document.querySelector("#app");
@@ -531,3 +506,4 @@ ReactDOM.render(e(
   gameId: appElement.getAttribute("data-game-id")}
   ), 
   appElement);
+
