@@ -536,7 +536,7 @@ class HatGameApp extends React.Component {
         return e(
           'div',
           { className: "game_done_text" },
-          'Game complete, thanks for playing!'
+          `Game complete, thanks for playing! Scores: ${this.state.scores}`
         );
       default:
         return e(
@@ -550,6 +550,10 @@ class HatGameApp extends React.Component {
     return e(
       'div',
       null,
+      e('div',
+        {className: 'main_phase_text'},
+        this.state.mainPhase
+      ),
       e(PlayerList,
         {
           players: this.state.players,
