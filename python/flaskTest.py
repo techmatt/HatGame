@@ -8,7 +8,7 @@ session = requests.session()
 URLBase = 'http://127.0.0.1:5000/'
 randomPhrases = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', \
                  'September', 'October', 'November', 'December']
-runInvalidTests = True
+runInvalidTests = False
 
 def makeRandomPhraseDict(phraseCount):
     phrases = []
@@ -58,11 +58,17 @@ def processPostRequest(URL, json=None):
     return processRequest(URL, json, True)
 
 def testGameCreation():
+    # create a game with a random ID and verify it is on the server
+    gameDict = makeRandomGame()
+    del gameDict['id']
+    randomIDResult = processPostRequest(URLBase + 'api/newgame', json=gameDict)
+    randomID = randomIDResult['id']
+
     # create 3 new games and verify they are on the server
-    gameNames = []
+    gameIDs = []
     for x in range(0, 3):
         gameDict = makeRandomGame()
-        gameNames.append(gameDict['id'])
+        gameIDs.append(gameDict['id'])
         processPostRequest(URLBase + 'api/newgame', json=gameDict)
 
         # test creating the same game twice
@@ -71,10 +77,11 @@ def testGameCreation():
     
     # verify each created game is on the server
     gameList = processGetRequest(URLBase + 'api/gamelist')['games']
-    for name in gameNames:
-        assert(name in gameList)
+    assert(randomID in gameList)
+    for gameID in gameIDs:
+        assert(gameID in gameList)
     print('game creation test passed')
-    return gameNames
+    return gameIDs
 
 def testInvalidCalls(validGameID):
     # make API calls to an non-existant game

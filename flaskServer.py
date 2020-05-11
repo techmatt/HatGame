@@ -2,6 +2,8 @@
 import traceback
 import sys
 import os
+import string
+import random
 from flask import Flask, request, Response, send_from_directory, render_template, jsonify, json
 from werkzeug.exceptions import BadRequestKeyError
 from collections import Iterable
@@ -91,22 +93,22 @@ def gamePortal(gameID):
                            game_name=gameID, playerlist=playerList, video_url=game.videoURL)
 
 @app.route('/games/<gameId>/<playerId>/', methods=['GET'])
-def gamePlayerView(gameId, playerId):
+def gamePlayerView(gameID, playerID):
     # As a hack to get the browser to reaload the js on changes, append the last
     # update time to requests
     # See https://stackoverflow.com/a/54164514/537390
     last_updated = str(os.path.getmtime('static/game.js'))
     
     try:
-        game = activeGames[gameId]
+        game = activeGames[gameID]
     except KeyError as err:
         return ErrorResponse(err)
         
     return render_template(
         "game.html", 
         video_url=game.videoURL,
-        gameId=gameId, 
-        playerId=playerId, 
+        gameId=gameID, 
+        playerId=playerID, 
         last_updated=last_updated)
 
 #@app.route('/newGame<command>')
@@ -151,7 +153,6 @@ def retrieveGameState(gameId):
 @app.route('/api/newgame', methods=['POST'])
 def startNewGame():
     # params:
-    #  id: identifier for the game
     #  players: list of player names
     #  phrases: number of phrases per player
     #  time: number of seconds per turn
@@ -162,8 +163,22 @@ def startNewGame():
     except Exception as ex:
         traceback.print_exc(file=sys.stdout)
 
+    def randomID():
+        letters = string.ascii_lowercase
+        return ''.join(random.choice(letters) for i in range(8))
+
     try:
         id = getParam(requestJSON, 'id')
+        if id in activeGames:
+            print('game ID already exists:', id)
+            return ErrorResponse('game ID already exists: ' + id)
+    except ParamError as err:
+        id = randomID()
+        while id in activeGames:
+            id = randomID()
+
+    try:
+        #id = getParam(requestJSON, 'id')
         playerIDs = getParam(requestJSON, 'players', isList=True)
         phrasesPerPlayer = getParam(requestJSON, 'phrasesPerPlayer', isInt=True)
         secondsPerTurn = getParam(requestJSON, 'secondsPerTurn', isInt=True)
@@ -172,14 +187,10 @@ def startNewGame():
         traceback.print_exc(file=sys.stdout)
         return ErrorResponse(err)
 
-    if id in activeGames:
-        print('game ID already exists:', id)
-        return ErrorResponse('game ID already exists: ' + id)
-
-    print('new game players:', playerIDs)
+    print('new game:', id, 'players:', playerIDs)
     newSession = GameSession(id, playerIDs, phrasesPerPlayer, secondsPerTurn, videoURL)
     activeGames[id] = newSession
-    return jsonify({'gameURL' : '/games/' + id + '/'})
+    return jsonify({'id' : id, 'gameURL' : '/games/' + id + '/'})
 
 @app.route('/games/<gameID>/<playerID>/recordphrases', methods=['POST'])
 def recordPhrases(gameID, playerID):
