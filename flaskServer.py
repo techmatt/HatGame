@@ -50,36 +50,36 @@ def newGameURL():
 def gameListHTML():
     return render_template("game-list.html")
 
-@app.route('/api/stream/<gameID>/<playerID>/events', methods=['GET'])
-def stream(gameID, playerID):
+@app.route('/api/stream/<gameId>/<playerId>/events', methods=['GET'])
+def stream(gameId, playerId):
     try:
-        game = activeGames[gameID]
-        player = game.playersByID[playerID]
+        game = activeGames[gameId]
+        player = game.playersByID[playerId]
     except KeyError as err:
         return ErrorResponse(err)
-    print('registering for stream', gameID, playerID)
+    print('registering for stream', gameId, playerId)
     return Response(eventStream(game, player),
                     mimetype="text/event-stream")
-    """var source = new EventSource('/api/stream/<gameID>/<playerID>/events');
+    """var source = new EventSource('/api/stream/<gameId>/<playerId>/events');
        source.onmessage = function (event) { alert(event.data); };"""
 
-@app.route('/api/refresh/<gameID>/', methods=['GET'])
-def signalRefreshDebug(gameID):
+@app.route('/api/refresh/<gameId>/', methods=['GET'])
+def signalRefreshDebug(gameId):
     try:
-        game = activeGames[gameID]
+        game = activeGames[gameId]
     except KeyError as err:
         return ErrorResponse(err)
     game.signalRefresh()
-    print('signaled refresh for', gameID)
+    print('signaled refresh for', gameId)
     return 'success'
 
-@app.route('/games/<gameID>/', methods=['GET'])
-def gamePortal(gameID):
+@app.route('/games/<gameId>/', methods=['GET'])
+def gamePortal(gameId):
     # params:
-    #  gameID: ID of the game
+    #  gameId: ID of the game
     
     try:
-        game = activeGames[gameID]
+        game = activeGames[gameId]
     except KeyError as err:
         return ErrorResponse(err)
 
@@ -90,25 +90,25 @@ def gamePortal(gameID):
         d['caption'] = player.id
         playerList.append(d)
     return render_template("game-portal.html", \
-                           game_name=gameID, playerlist=playerList, video_url=game.videoURL)
+                           game_name=gameId, playerlist=playerList, video_url=game.videoURL)
 
 @app.route('/games/<gameId>/<playerId>/', methods=['GET'])
-def gamePlayerView(gameID, playerID):
+def gamePlayerView(gameId, playerId):
     # As a hack to get the browser to reaload the js on changes, append the last
     # update time to requests
     # See https://stackoverflow.com/a/54164514/537390
     last_updated = str(os.path.getmtime('static/game.js'))
     
     try:
-        game = activeGames[gameID]
+        game = activeGames[gameId]
     except KeyError as err:
         return ErrorResponse(err)
         
     return render_template(
         "game.html", 
         video_url=game.videoURL,
-        gameId=gameID, 
-        playerId=playerID, 
+        gameId=gameId, 
+        playerId=playerId, 
         last_updated=last_updated)
 
 #@app.route('/newGame<command>')
@@ -179,7 +179,7 @@ def startNewGame():
 
     try:
         #id = getParam(requestJSON, 'id')
-        playerIDs = getParam(requestJSON, 'players', isList=True)
+        playerIds = getParam(requestJSON, 'players', isList=True)
         phrasesPerPlayer = getParam(requestJSON, 'phrasesPerPlayer', isInt=True)
         secondsPerTurn = getParam(requestJSON, 'secondsPerTurn', isInt=True)
         videoURL = getParam(requestJSON, 'videoURL', isString=True)
@@ -187,18 +187,18 @@ def startNewGame():
         traceback.print_exc(file=sys.stdout)
         return ErrorResponse(err)
 
-    print('new game:', id, 'players:', playerIDs)
-    newSession = GameSession(id, playerIDs, phrasesPerPlayer, secondsPerTurn, videoURL)
+    print('new game:', id, 'players:', playerIds)
+    newSession = GameSession(id, playerIds, phrasesPerPlayer, secondsPerTurn, videoURL)
     activeGames[id] = newSession
     return jsonify({'id' : id, 'gameURL' : '/games/' + id + '/'})
 
-@app.route('/games/<gameID>/<playerID>/recordphrases', methods=['POST'])
-def recordPhrases(gameID, playerID):
+@app.route('/games/<gameId>/<playerId>/recordphrases', methods=['POST'])
+def recordPhrases(gameId, playerId):
     # params:
     #  phrases: list of phrases to add. Should be exactly phrasesPerPlayer entries.
     
     try:
-        game = activeGames[gameID]
+        game = activeGames[gameId]
     except KeyError as err:
         traceback.print_exc()
         return ErrorResponse(err)
@@ -211,59 +211,59 @@ def recordPhrases(gameID, playerID):
         return ErrorResponse(err)
 
     try:
-        print("Got phrases from player {}: {}".format(playerID, phrases))
-        game.recordPlayerPhrases(playerID, phrases)
+        print("Got phrases from player {}: {}".format(playerId, phrases))
+        game.recordPlayerPhrases(playerId, phrases)
     except GameError as err:
         traceback.print_exc()
         return ErrorResponse(err)
     game.signalRefresh()
     return 'phrases recorded'
 
-@app.route('/games/<gameID>/<playerID>/startturn', methods=['POST'])
-def startTurn(gameID, playerID):
+@app.route('/games/<gameId>/<playerId>/startturn', methods=['POST'])
+def startTurn(gameId, playerId):
     # params:
     #  None
     
     try:
-        game = activeGames[gameID]
+        game = activeGames[gameId]
     except KeyError as err:
         traceback.print_exc()
         return ErrorResponse(err)
 
     try:
-        game.startPlayerTurn(playerID)
+        game.startPlayerTurn(playerId)
     except GameError as err:
         traceback.print_exc()
         return ErrorResponse(err)
     game.signalRefresh()
     return 'turn started'
 
-@app.route('/games/<gameID>/<playerID>/endturn', methods=['POST'])
-def endTurn(gameID, playerID):
+@app.route('/games/<gameId>/<playerId>/endturn', methods=['POST'])
+def endTurn(gameId, playerId):
     # params:
     #  None
     
     try:
-        game = activeGames[gameID]
+        game = activeGames[gameId]
     except KeyError as err:
         traceback.print_exc()
         return ErrorResponse(err)
 
     try:
-        game.endPlayerTurn(playerID)
+        game.endPlayerTurn(playerId)
     except GameError as err:
         traceback.print_exc()
         return ErrorResponse(err)
     game.signalRefresh()
     return 'turn ended'
 
-@app.route('/games/<gameID>/<playerID>/confirmphrases', methods=['POST'])
-def confirmPhrases(gameID, playerID):
+@app.route('/games/<gameId>/<playerId>/confirmphrases', methods=['POST'])
+def confirmPhrases(gameId, playerId):
     # params:
     #  acceptedPhrases: comma-separated phrases to confirm as 'accepted'.
     
     try:
-        game = activeGames[gameID]
+        game = activeGames[gameId]
     except KeyError as err:
         traceback.print_exc()
         return ErrorResponse(err)
@@ -276,7 +276,7 @@ def confirmPhrases(gameID, playerID):
         return ErrorResponse(err)
 
     try:
-        game.confirmPhrases(playerID, acceptedPhrases)
+        game.confirmPhrases(playerId, acceptedPhrases)
     except GameError as err:
         traceback.print_exc()
         return ErrorResponse(err)
