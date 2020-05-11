@@ -84,6 +84,9 @@ img#logo {
     justify-content: space-between;
 }
 input {
+	width: 100%;
+	margin-right: 5px;
+	min-height: 2.5em;
 	padding-right: 1em;
 	padding-left: 1em;
 }
