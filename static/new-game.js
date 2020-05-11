@@ -44,13 +44,8 @@
 			return { error: "Invalid number of valid players. Players must be between " + 
 			    minPlayers + " and " + maxPlayers + " and player number must be even." };
 		}
-		// check if game ID is empty
-		if(document.querySelector("#gameId").value === "") {
-			return { error: "Game ID is a required field." };
-		}
 		// build the gameDict object
 		let gameDict = {
-			id: document.querySelector("#gameId").value,
 			players: playerArray,
 			phrasesPerPlayer: document.querySelector("#wordCount").value,
 			secondsPerTurn: document.querySelector("#turnLength").value,
