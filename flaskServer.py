@@ -96,8 +96,15 @@ def gamePlayerView(gameId, playerId):
     # update time to requests
     # See https://stackoverflow.com/a/54164514/537390
     last_updated = str(os.path.getmtime('static/game.js'))
+    
+    try:
+        game = activeGames[gameId]
+    except KeyError as err:
+        return ErrorResponse(err)
+        
     return render_template(
         "game.html", 
+        video_url=game.videoURL,
         gameId=gameId, 
         playerId=playerId, 
         last_updated=last_updated)

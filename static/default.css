@@ -36,6 +36,15 @@ img#logo {
 	height: 100px;
 	cursor: pointer;
 }
+#videoLink {
+    display: flex;
+}
+
+#videoLink>a {
+	height: 2.5em;
+	align-self: center;
+}
+
 #playerList {
     display: flex;
 	flex-wrap: wrap;

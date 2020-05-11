@@ -5,6 +5,11 @@
 		</a>
 		<span>Hat Game</span>
 	</div>
+	<div id="videoLink">
+	{% if video_url is defined and video_url != '' %} 
+		<a href="{{ video_url }}"><button>Open Video</button></a>
+	{% endif %}
+	</div>
 	<div id="playerList">
 	{% for item in playerlist %}
 		<div class="player-icon {{ loop.cycle('team-1', 'team-2') }}">
