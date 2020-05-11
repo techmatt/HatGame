@@ -201,6 +201,9 @@ for x in range(0, 1000):
     if runInvalidTests:
         simulateInvalidPlayerTurn(newGameID)
 
+    if x == 1:
+        print(processGetRequest(URLBase + 'api/gamestate/'+ newGameID))
+
     if newMainPhase == 'GameMainPhase.SingleWord':
         break
 

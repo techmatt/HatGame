@@ -2,6 +2,7 @@ import os
 import sys
 import random
 import threading
+import copy
 from datetime import datetime
 from enum import Enum
 from collections.abc import Iterable
@@ -84,6 +85,8 @@ class GameSession:
         self.phrasesInHat = None
         self.turnStartTime = None
         self.activePlayerIdx = -1
+        self.prevPhrasesPlayerName = ''
+        self.prevPhrases = []
     
     def getStateDict(self):
         result = {}
@@ -109,6 +112,8 @@ class GameSession:
         result['activePlayerIdx'] = self.activePlayerIdx
         result['scores'] = [self.teams[0].score, self.teams[1].score]
         result['videoURL'] = str(self.videoURL)
+        result['prevPhrasesPlayerName'] = self.prevPhrasesPlayerName
+        result['prevPhrases'] = self.prevPhrases
         return result
 
     def signalRefresh(self):
@@ -167,7 +172,6 @@ class GameSession:
             if len(phrase) < 3:
                 raise GameError('phrases must contain at least 3 letters') 
 
-
         for phrase in phrases:
             player.phrases.append(phrase)
             self.allPhrases.append(phrase)
@@ -223,6 +227,9 @@ class GameSession:
             else:
                 raise GameError('phrase not in hat: ' + phrase)
             
+        self.prevPhrasesPlayerName = self.players[self.activePlayerIdx].id
+        self.prevPhrases = copy.copy(acceptedPhrases)
+
         self.activePlayerIdx = (self.activePlayerIdx + 1) % len(self.players)
         self.subPhase = GameSubPhase.WaitForStart
 
