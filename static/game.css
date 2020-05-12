@@ -102,6 +102,15 @@ form>div {
   text-indent: 1em;
 }
 
+.waiting_for_player_to_start_text {
+  font-size: 1em; /* Placeholder */
+}
+
+.previous_turn_phrase_div {
+  text-align: left;
+  font-weight: normal; 
+}
+
 form {
   margin-top: .3em;
   display: flex;

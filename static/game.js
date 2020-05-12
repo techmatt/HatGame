@@ -336,23 +336,47 @@ class HatGameApp extends React.Component {
     }
   }
 
+  renderPreviousRoundPhraseList() {
+    if (this.state.prevPhrases && this.state.prevPhrases.length > 0)
+      return e(
+        'div', { className: 'previous_turn_phrase_div' },
+        'Phrases gotten in previous turn:',
+        e('ul',
+          null,
+          this.state.prevPhrases.map(phrase =>
+            e('li', { key: phrase }, phrase)
+          )
+        )
+      )
+    else
+      // no previous phrases, just return empty div, 
+      return e('div', null)
+  }
+
   renderWhenWaitingForStart() {
     if (this.isItMyTurn()) {
-      return e('div', null,
-          e('button',
-            {className: 'start_button',
-             onClick: this.handleTurnStart.bind(this)
-             },
-            'Start'
-           )
-         )
-        } else {
-          const activePlayer = this.state.players[this.state.activePlayerIdx];
-          return e(
-	    'div', null,
-            `Waiting for current player ${activePlayer} to start game`
-          )
-        }
+      return e(
+        'div', null,
+        this.renderPreviousRoundPhraseList(),
+        e('button',
+          {
+            className: 'start_button',
+            onClick: this.handleTurnStart.bind(this)
+          },
+          'Start'
+        )
+      )
+    } else {
+      const activePlayer = this.state.players[this.state.activePlayerIdx];
+      return e(
+        'div', null,
+        this.renderPreviousRoundPhraseList(),
+        e(
+          'div', { className: 'waiting_for_player_to_start_text' },
+          `Waiting for current player ${activePlayer} to start game`
+        )
+      )
+    }
   }
 
   unclickedHatWords() {
