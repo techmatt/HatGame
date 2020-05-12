@@ -4,7 +4,7 @@
   color: blue;
 }
 
-button.
+
 
 /* And the LORD did see the table, and it was was good. But all things strive, and the table sought to better itself, and became a BLOCK. */
 .player_list_table {
@@ -95,6 +95,11 @@ form>div {
 .main_phase_text {
   font-size: 1.5em;
   font-weight: bold;
+}
+
+.hat_size_text {
+  font-size: 1em;
+  text-indent: 1em;
 }
 
 form {

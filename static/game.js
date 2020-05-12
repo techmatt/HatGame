@@ -457,6 +457,16 @@ class HatGameApp extends React.Component {
     }
   }
 
+  hatSizeMessage() {
+    if (this.state.hat && this.state.players) {
+      const countInHat = this.state.hat.length;
+      const hatCapacity = this.state.phrasesPerPlayer * this.state.players.length;
+      return `Words in hat: ${countInHat} of ${hatCapacity}`;
+    } else {
+      return 'There is no hat (yet)';
+    }
+  }
+
   render() {
     return e(
       'div',
@@ -464,6 +474,10 @@ class HatGameApp extends React.Component {
       e('div',
         {className: 'main_phase_text'},
         this.state.mainPhase
+      ),
+      e('div',
+        {className: 'hat_size_text'},
+        this.hatSizeMessage()
       ),
       e(PlayerList,
         {
