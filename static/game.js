@@ -487,7 +487,7 @@ class HatGameApp extends React.Component {
       const hatCapacity = this.state.phrasesPerPlayer * this.state.players.length;
       return `Words in hat: ${countInHat} of ${hatCapacity}`;
     } else {
-      return 'There is no hat (yet)';
+      return undefined; // No hat, just create empty div
     }
   }
 
