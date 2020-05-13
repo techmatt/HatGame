@@ -101,6 +101,7 @@ input {
 }
 #optionList .input-section input {
     float: right;
+    width: auto;
 }
 #footer {
     border-bottom-left-radius: .3em;
@@ -133,6 +134,9 @@ button.remove {
 }
 button:hover, .button:hover {
     background-color: #169000;
+}
+button.remove:hover, .button.remove:hover {
+    background-color: #c00000;
 }
 button:active {
     background-color: #72ce76;
