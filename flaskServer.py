@@ -64,7 +64,7 @@ def stream(gameId, playerId):
        source.onmessage = function (event) { alert(event.data); };"""
 
 @app.route('/api/refresh/<gameId>/', methods=['GET'])
-def signalRefreshDebug(gameId):
+def signalGameRefresh(gameId):
     try:
         game = activeGames[gameId]
     except KeyError as err:
@@ -187,8 +187,12 @@ def startNewGame():
         traceback.print_exc(file=sys.stdout)
         return ErrorResponse(err)
 
-    print('new game:', id, 'players:', playerIds)
-    newSession = GameSession(id, playerIds, phrasesPerPlayer, secondsPerTurn, videoURL)
+    teams = [ [], [] ]
+    for playerIdx, playerId in enumerate(playerIds):
+        teams[playerIdx % 2].append(playerId)
+
+    print('new game:', id, 'players:', playerIds, 'teams:', teams)
+    newSession = GameSession(id, teams, phrasesPerPlayer, secondsPerTurn, videoURL)
     activeGames[id] = newSession
     return jsonify({'id' : id, 'gameURL' : '/games/' + id + '/'})
 
@@ -291,7 +295,7 @@ def createDebugWriteGame():
     game_id='debug_write_phase'
     game = GameSession(
         id=game_id, 
-        playerIDs=['graham', 'matt', 'nik', 'peter'],
+        teamPlayerLists=[ ['graham', 'matt'], ['nik', 'peter'] ],
         phrasesPerPlayer=3, 
         secondsPerTurn=30,
         videoURL='http://zoom.com')
@@ -307,7 +311,7 @@ def createDebugMultiWordGame():
     game_id='debug_multi_word_phase'
     game = GameSession(
         id=game_id, 
-        playerIDs=['graham', 'matt', 'nik', 'peter'],
+        teamPlayerLists=[ ['graham', 'matt'], ['nik', 'peter'] ],
         phrasesPerPlayer=3, 
         secondsPerTurn=5,
         videoURL='http://zoom.com')

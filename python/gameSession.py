@@ -7,6 +7,8 @@ from datetime import datetime
 from enum import Enum
 from collections.abc import Iterable
 
+minContinuationTurnSeconds = 5.0
+
 class GameError(Exception):
     pass
 
@@ -24,25 +26,24 @@ class GameSubPhase(Enum):
     ConfirmingPhrases = 3,
     
 class Player:
-    def __init__(self, id, idx, teamIdx):
+    def __init__(self, id):
         self.id = id
-        self.idx = idx
-        self.teamIdx = teamIdx
         self.refreshEvent = threading.Event()
         self.phrases = []
 
 class Team:
-    def __init__(self, idx):
-        self.idx = idx
+    def __init__(self, teamIdx, players):
+        self.teamIdx = teamIdx
+        self.activePlayerIdx = 0
+        self.players = players
         self.score = 0
 
 class GameSession:
-    def __init__(self, id, playerIDs, phrasesPerPlayer, secondsPerTurn, videoURL):
-        #self.id = uuid.uuid1().hex
+    def __init__(self, id, teamPlayerLists, phrasesPerPlayer, secondsPerTurn, videoURL):
         self.showLog = True
-
-        print('game start', id, phrasesPerPlayer, secondsPerTurn, playerIDs)
         self.id = id
+        
+        print('game start', id, phrasesPerPlayer, secondsPerTurn, teamPlayerLists)
         self.phrasesPerPlayer = phrasesPerPlayer
         self.secondsPerTurn = secondsPerTurn
         self.videoURL = videoURL
@@ -53,28 +54,31 @@ class GameSession:
         if secondsPerTurn < 5 or secondsPerTurn > 200:
             raise GameError('turns must be between 5 and 200 seconds') 
 
-        if len(playerIDs) < 4 or len(playerIDs) > 10:
-            raise GameError('must have between 4 and 10 players: ' + playerIDs) 
-
-        if len(playerIDs) % 2 != 0:
-            raise GameError('must have an even number of players')
+        teamCount = len(teamPlayerLists)
+        if teamCount < 2 or teamCount > 30:
+            raise GameError('must have between 2 and 30 teams: ' + teams)
 
         self.players = []
         self.playersByID = {}
         self.teams = []
-        self.teams.append(Team(0))
-        self.teams.append(Team(1))
-        for idx, playerID in enumerate(playerIDs):
-            if len(playerID) <= 0:
-                raise GameError('all players must have a name')
-            if playerID in self.playersByID:
-                raise GameError('all player names must be unique')
+        for teamIdx, teamPlayerList in enumerate(teamPlayerLists):
+            if len(teamPlayerList) == 0 or len(teamPlayerList) > 20:
+                raise GameError('all teams must have between one and 20 players')
 
-            teamIdx = idx % 2
-            player = Player(playerID, idx, teamIdx)
-            self.players.append(player)
-            self.playersByID[playerID] = player
-                
+            teamPlayers = []
+            for playerTeamIdx, playerID in enumerate(teamPlayerList):
+                if playerID in self.playersByID:
+                    raise GameError('all player names must be unique')
+
+                player = Player(playerID)
+                teamPlayers.append(player)
+                self.players.append(player)
+                self.playersByID[playerID] = player
+
+            random.shuffle(teamPlayers)
+            team = Team(teamIdx, teamPlayers)
+            self.teams.append(team)
+
         self.allPhrases = []
         self.mainPhase = GameMainPhase.Write
         self.subPhase = GameSubPhase.Invalid
@@ -84,36 +88,54 @@ class GameSession:
         #
         self.phrasesInHat = None
         self.turnStartTime = None
-        self.activePlayerIdx = -1
+        self.activeTeamIdx = -1
         self.prevPhrasesPlayerName = ''
         self.prevPhrases = []
+        self.continuationTurnSeconds = 0.0
     
     def getStateDict(self):
         result = {}
-        playerList = []
-        phraseCompleteList = []
-        for x in self.players:
-            playerList.append(x.id)
-            phraseCompleteList.append(len(x.phrases) == self.phrasesPerPlayer)
+        teamList = []
+        allPlayersList = []
+        activePlayerIdxByTeam = []
+        for team in self.teams:
+            teamPlayerList = []
+            for player in team.players:
+                teamPlayerList.append(player.id)
+                allPlayersList.append(player.id)
+            teamList.append(teamPlayerList)
+            activePlayerIdxByTeam.append(team.activePlayerIdx)
+
+        phrasesCompleteByPlayer = {}
+        if self.mainPhase == GameMainPhase.Write:
+            for team in self.teams:
+                for player in team.players:
+                    phrasesCompleteByPlayer[player.id] = (len(player.phrases) == self.phrasesPerPlayer)
 
         secondsRemaining = -1.0
         if self.turnStartTime is not None:
             elapsedSeconds = (datetime.now() - self.turnStartTime).total_seconds()
-            secondsRemaining = max(0.0, self.secondsPerTurn - elapsedSeconds)
+            if self.continuationTurnSeconds == 0.0:
+                secondsRemaining = max(0.0, self.secondsPerTurn - elapsedSeconds)
+            else:
+                secondsRemaining = max(0.0, self.continuationTurnSeconds - elapsedSeconds)
         result['secondsRemaining'] = secondsRemaining
 
         result['phrasesPerPlayer'] = self.phrasesPerPlayer
         result['secondsPerTurn'] = self.secondsPerTurn
-        result['players'] = playerList #list(map(lambda x: x.id, self.players))
-        result['playerHasCompletedPhrases'] = phraseCompleteList
+        result['players'] = allPlayersList
+        result['teams'] = teamList
+        result['phrasesCompleteByPlayer'] = phrasesCompleteByPlayer
         result['hat'] = self.phrasesInHat
         result['mainPhase'] = str(self.mainPhase)
         result['subPhase'] = str(self.subPhase)
-        result['activePlayerIdx'] = self.activePlayerIdx
+        result['activeTeamIndex'] = self.activeTeamIdx
+        result['activePlayerIndexByTeam'] = activePlayerIdxByTeam
         result['scores'] = [self.teams[0].score, self.teams[1].score]
         result['videoURL'] = str(self.videoURL)
         result['prevPhrasesPlayerName'] = self.prevPhrasesPlayerName
         result['prevPhrases'] = self.prevPhrases
+        result['continuationTurnSeconds'] = self.continuationTurnSeconds
         return result
 
     def signalRefresh(self):
@@ -126,7 +148,8 @@ class GameSession:
             print(text)
 
     def assertActivePlayer(self, playerID):
-        activePlayer = self.players[self.activePlayerIdx]
+        activeTeam = self.teams[self.activeTeamIdx]
+        activePlayer = activeTeam.players[activeTeam.activePlayerIdx]
         if activePlayer.id != playerID:
             raise GameError(playerID + ' tried to act but it is ' + activePlayer.id + '\'s turn')
         return activePlayer
@@ -151,7 +174,7 @@ class GameSession:
         self.log('new main phase: ' + str(newMainPhase))
         self.mainPhase = newMainPhase
         self.subPhase = GameSubPhase.WaitForStart
-        self.phrasesInHat = list(self.allPhrases) # shallow copy
+        self.phrasesInHat = list(self.allPhrases)
 
     def recordPlayerPhrases(self, playerID, phrases):
         self.log(playerID + ' phrases: ' + str(phrases))
@@ -169,8 +192,8 @@ class GameSession:
             raise GameError('invalid number of phrases recorded: ' + str(len(phrases)))
 
         for phrase in phrases:
-            if len(phrase) < 3:
-                raise GameError('phrases must contain at least 3 letters') 
+            if len(phrase) < 1 or phrase == ' ':
+                raise GameError('phrases must contain at least 1 character') 
 
         for phrase in phrases:
             player.phrases.append(phrase)
@@ -179,10 +202,10 @@ class GameSession:
         if self.allPhrasesAdded():
             self.log('all phrases completed, starting multiword round')
             self.newMainPhase(GameMainPhase.MultiWord)
-            self.activePlayerIdx = random.randint(0, len(self.players) - 1)
+            self.activeTeamIdx = random.randint(0, len(self.teams) - 1)
 
     def allPhrasesAdded(self):
-        for player in self.players:
+        for id, player in self.playersByID.items():
             if len(player.phrases) < self.phrasesPerPlayer:
                 return False
         return True
@@ -203,13 +226,16 @@ class GameSession:
 
     def endPlayerTurn(self, playerID):
         self.log(playerID + ' turn time complete')
-        self.turnStartTime = None
-
+        
         activePlayer = self.assertActivePlayer(playerID)
         self.assertMainPhase([GameMainPhase.MultiWord, GameMainPhase.SingleWord, GameMainPhase.Charade])
         self.assertSubPhase(GameSubPhase.Started)
         
-        #self.turnTimeTaken = min((datetime.now() - self.turnStartTime).total_seconds(), self.secondsPerTurn)
+        turnTimeTaken = min((datetime.now() - self.turnStartTime).total_seconds(), self.secondsPerTurn)
+        self.leftoverTurnTime = self.secondsPerTurn - turnTimeTaken
+        self.continuationTurnSeconds = 0.0
+        self.turnStartTime = None
+
         self.subPhase = GameSubPhase.ConfirmingPhrases
 
     def confirmPhrases(self, playerID, acceptedPhrases):
@@ -220,20 +246,23 @@ class GameSession:
         self.assertMainPhase([GameMainPhase.MultiWord, GameMainPhase.SingleWord, GameMainPhase.Charade])
         self.assertSubPhase(GameSubPhase.ConfirmingPhrases)
         
+        activeTeam = self.teams[self.activeTeamIdx]
         for phrase in acceptedPhrases:
             if phrase in self.phrasesInHat:
                 self.phrasesInHat.remove(phrase)
-                self.teams[activePlayer.teamIdx].score += 1
+                activeTeam.score += 1
             else:
                 raise GameError('phrase not in hat: ' + phrase)
             
-        self.prevPhrasesPlayerName = self.players[self.activePlayerIdx].id
+        self.prevPhrasesPlayerName = activePlayer.id
         self.prevPhrases = copy.copy(acceptedPhrases)
 
-        self.activePlayerIdx = (self.activePlayerIdx + 1) % len(self.players)
-        self.subPhase = GameSubPhase.WaitForStart
-
+        shouldAdvancePlayer = True
         if len(self.phrasesInHat) == 0:
+
+            if self.leftoverTurnTime >= minContinuationTurnSeconds:
+                shouldAdvancePlayer = False
+
             if self.mainPhase == GameMainPhase.MultiWord:
                 self.newMainPhase(GameMainPhase.SingleWord)
             elif self.mainPhase == GameMainPhase.SingleWord:
@@ -242,20 +271,26 @@ class GameSession:
                 self.log('all phrases in charade completed, game complete')
                 self.mainPhase = GameMainPhase.Done
 
+        if shouldAdvancePlayer:
+            activeTeam.activePlayerIdx = (activeTeam.activePlayerIdx + 1) % len(activeTeam.players)
+            self.activeTeamIdx = (self.activeTeamIdx + 1) % len(self.teams)
+        else:
+            self.continuationTurnSeconds = self.leftoverTurnTime
+        self.subPhase = GameSubPhase.WaitForStart
 
 if __name__ == "__main__":
+    print('hi!')
     # run a test game
-    playerNames = ['matt', 'peter', 'amanda', 'graham']
+    teams = [['matt', 'peter'], ['amanda', 'graham', 'john']]
     randomPhrases = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', \
                      'September', 'October', 'November', 'December']
     phrasesPerPlayer = 6
 
-    game = GameSession('test game', playerNames, phrasesPerPlayer, 30)
+    game = GameSession('test game', teams, phrasesPerPlayer, 30, 'http://hangouts.com')
 
     print('adding random phrases')
     for x in range(0, 10000):
-        playerID = random.choice(playerNames)
-        #playerID = game.players[x].id
+        playerID = random.choice(game.players).id
         playerPhrases = []
         for y in range(0, phrasesPerPlayer):
             playerPhrases.append(random.choice(randomPhrases) + " " + random.choice(randomPhrases))
@@ -270,9 +305,8 @@ if __name__ == "__main__":
 
     def runGamePhase(newPhase):
         for x in range(0, 10000):
-            playerID = random.choice(playerNames)
-            #playerID = game.players[game.activePlayerIdx].id
-
+            playerID = random.choice(game.players).id
+            
             try:
                 game.startPlayerTurn(playerID)
             except GameError as err:
@@ -296,7 +330,6 @@ if __name__ == "__main__":
         print('phase: ', game.mainPhase)
         print('team A score: ', game.teams[0].score)
         print('team B score: ', game.teams[1].score)
-
 
     print('starting multiword phase')
     runGamePhase(GameMainPhase.SingleWord)

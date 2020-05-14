@@ -139,21 +139,23 @@ def simulateValidPlayerTurn(gameID):
     gameURLBase = URLBase + 'games/' + gameID + '/'
     players = gameState['players']
     hat = gameState['hat']
-    activePlayerIdx = gameState['activePlayerIdx']
+    activeTeamIdx = gameState['activeTeamIndex']
+    activePlayerIndex = gameState['activePlayerIndexByTeam'][activeTeamIdx]
+    activePlayer = gameState['teams'][activeTeamIdx][activePlayerIndex]
 
     verifyPhase(newGameID, None, 'GameSubPhase.WaitForStart')
-    processPostRequest(gameURLBase + players[activePlayerIdx] + '/startturn', json=None)
+    processPostRequest(gameURLBase + activePlayer + '/startturn', json=None)
     verifyPhase(newGameID, None, 'GameSubPhase.Started')
 
     #print(processGetRequest(URLBase + 'api/gamestate/'+ gameID))
     
-    processPostRequest(gameURLBase + players[activePlayerIdx] + '/endturn', json=None)
+    processPostRequest(gameURLBase + activePlayer + '/endturn', json=None)
     verifyPhase(newGameID, None, 'GameSubPhase.ConfirmingPhrases')
 
     successfulWordCount = min(len(hat), random.randint(0, 5))
     randomAcceptedPhrases = random.sample(hat, successfulWordCount)
     acceptedJson = {'acceptedPhrases' : randomAcceptedPhrases}
-    processPostRequest(gameURLBase + players[activePlayerIdx] + '/confirmphrases', json=acceptedJson)
+    processPostRequest(gameURLBase + activePlayer + '/confirmphrases', json=acceptedJson)
     verifyPhase(newGameID, None, 'GameSubPhase.WaitForStart')
     return processGetRequest(URLBase + 'api/gamestate/'+ gameID)['mainPhase']
 
