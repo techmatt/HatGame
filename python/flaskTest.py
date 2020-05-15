@@ -10,6 +10,9 @@ randomPhrases = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
                  'September', 'October', 'November', 'December']
 runInvalidTests = False
 
+def getRandomWordsFromServer():
+    return processGetRequest(URLBase + 'api/randomwords')['words']
+
 def makeRandomPhraseDict(phraseCount):
     phrases = []
     for y in range(0, phraseCount):
@@ -89,7 +92,7 @@ def testInvalidCalls(validGameID):
     processPostRequest(URLBase + 'games/badGameID/badPlayerID/recordphrases', json=makeRandomPhraseDict(5))
 
     # get state of an invalid game
-    gameState = processGetRequest(URLBase + 'api/gamestate' + 'badGameID')
+    gameState = processGetRequest(URLBase + 'api/gamestate/' + 'badGameID')
 
     # get valid game state
     gameState = processGetRequest(URLBase + 'api/gamestate/'+ validGameID)
@@ -185,6 +188,9 @@ def simulateInvalidPlayerTurn(gameID):
     processPostRequest(activePlayerPrefix   + '/confirmphrases', json=acceptedJson)
 
     verifyPhase(newGameID, None, 'GameSubPhase.WaitForStart')
+
+print(getRandomWordsFromServer())
+print(getRandomWordsFromServer())
 
 newGameList = testGameCreation()
 newGameID = newGameList[0]

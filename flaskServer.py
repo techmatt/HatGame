@@ -73,6 +73,19 @@ def signalGameRefresh(gameId):
     print('signaled refresh for', gameId)
     return 'success'
 
+randomWordList = []
+@app.route('/api/randomwords', methods=['GET'])
+def getRandomWords():
+    if len(randomWordList) == 0:
+        with open('wordListA.txt') as file:
+            localRandomWordList = [line.strip() for line in file]
+        randomWordList.extend(localRandomWordList)
+        print('loaded random word list:', len(randomWordList))
+
+    result = {}
+    result['words'] = random.choices(randomWordList, k=5)
+    return jsonify(result)
+
 @app.route('/games/<gameId>/', methods=['GET'])
 def gamePortal(gameId):
     # params:
@@ -208,7 +221,6 @@ def recordPhrases(gameId, playerId):
         return ErrorResponse(err)
 
     requestJSON = request.get_json()
-    print('requestJSON:', requestJSON)
     try:
         phrases = getParam(requestJSON, 'phrases', isList=True)
     except ParamError as err:
