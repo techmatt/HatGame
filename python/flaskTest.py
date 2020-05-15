@@ -110,7 +110,8 @@ def testInvalidCalls(validGameID):
 def createValidPhrases(gameID):
     gameState = processGetRequest(URLBase + 'api/gamestate/'+ gameID)
     gameURLBase = URLBase + 'games/' + gameID + '/'
-    players = gameState['players']
+    teams = gameState['teams']
+    players = [player for team in teams for player in team]
     phrasesPerPlayer = gameState['phrasesPerPlayer']
 
     for playerIdx in range(0, len(players)):
@@ -130,20 +131,23 @@ def verifyPhase(gameID, targetMainPhase, targetSubPhase):
 
 def printScores(gameID):
     gameState = processGetRequest(URLBase + 'api/gamestate/'+ gameID)
+    teams = gameState['teams']
+    players = [player for team in teams for player in team]
     scoreA = gameState['scores'][0]
     scoreB = gameState['scores'][1]
     total = scoreA + scoreB
-    perPlayer = total // len(gameState['players'])
+    perPlayer = total // len(players)
     #assert(perPlayer == gameState['phrasesPerPlayer'])
     print('team scores:', scoreA, scoreB, total, perPlayer)
 
 def simulateValidPlayerTurn(gameID):
     gameState = processGetRequest(URLBase + 'api/gamestate/'+ gameID)
     gameURLBase = URLBase + 'games/' + gameID + '/'
-    players = gameState['players']
+    teams = gameState['teams']
+    players = [player for team in teams for player in team]
     hat = gameState['hat']
     activeTeamIdx = gameState['activeTeamIndex']
-    activePlayerIndex = gameState['activePlayerIndexByTeam'][activeTeamIdx]
+    activePlayerIndex = gameState['activePlayerIndexPerTeam'][activeTeamIdx]
     activePlayer = gameState['teams'][activeTeamIdx][activePlayerIndex]
 
     verifyPhase(newGameID, None, 'GameSubPhase.WaitForStart')
@@ -199,6 +203,8 @@ if runInvalidTests:
     testInvalidCalls(newGameID)
 
 verifyPhase(newGameID, 'GameMainPhase.Write', 'GameSubPhase.Invalid')
+
+print(processGetRequest(URLBase + 'api/gamestate/'+ newGameID))
 createValidPhrases(newGameID)
 verifyPhase(newGameID, 'GameMainPhase.MultiWord', 'GameSubPhase.WaitForStart')
 

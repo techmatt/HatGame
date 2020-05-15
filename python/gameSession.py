@@ -96,25 +96,33 @@ class GameSession:
     def getStateDict(self):
         result = {}
         teamList = []
-        allPlayersList = []
-        activePlayerIdxByTeam = []
+        teamScores = []
+        #allPlayersList = []
+        activePlayerIndexPerTeam = []
         for team in self.teams:
             teamPlayerList = []
             for player in team.players:
                 teamPlayerList.append(player.id)
-                allPlayersList.append(player.id)
+                #allPlayersList.append(player.id)
             teamList.append(teamPlayerList)
-            activePlayerIdxByTeam.append(team.activePlayerIdx)
+            teamScores.append(team.score)
+            activePlayerIndexPerTeam.append(team.activePlayerIdx)
 
-        phrasesCompleteByPlayer = {}
+        playerWritingStatus = {}
         if self.mainPhase == GameMainPhase.Write:
             for team in self.teams:
                 for player in team.players:
-                    phrasesCompleteByPlayer[player.id] = (len(player.phrases) == self.phrasesPerPlayer)
+                    playerWritingStatus[player.id] = (len(player.phrases) == self.phrasesPerPlayer)
 
         secondsRemaining = -1.0
-        if self.turnStartTime is not None:
-            elapsedSeconds = (datetime.now() - self.turnStartTime).total_seconds()
+        #if self.turnStartTime is not None:
+        if self.subPhase == GameSubPhase.WaitForStart or \
+           self.subPhase == GameSubPhase.Started:
+
+            elapsedSeconds = 0.0
+            if self.subPhase == GameSubPhase.Started:
+                elapsedSeconds = (datetime.now() - self.turnStartTime).total_seconds()
+
             if self.continuationTurnSeconds == 0.0:
                 secondsRemaining = max(0.0, self.secondsPerTurn - elapsedSeconds)
             else:
@@ -123,19 +131,20 @@ class GameSession:
 
         result['phrasesPerPlayer'] = self.phrasesPerPlayer
         result['secondsPerTurn'] = self.secondsPerTurn
-        result['players'] = allPlayersList
+        result['videoURL'] = str(self.videoURL)
+
+        #result['players'] = allPlayersList
         result['teams'] = teamList
-        result['phrasesCompleteByPlayer'] = phrasesCompleteByPlayer
+        result['playerWritingStatus'] = playerWritingStatus
+        result['scores'] = teamScores
+        
         result['hat'] = self.phrasesInHat
         result['mainPhase'] = str(self.mainPhase)
         result['subPhase'] = str(self.subPhase)
         result['activeTeamIndex'] = self.activeTeamIdx
-        result['activePlayerIndexByTeam'] = activePlayerIdxByTeam
-        result['scores'] = [self.teams[0].score, self.teams[1].score]
-        result['videoURL'] = str(self.videoURL)
+        result['activePlayerIndexPerTeam'] = activePlayerIndexPerTeam
         result['prevPhrasesPlayerName'] = self.prevPhrasesPlayerName
         result['prevPhrases'] = self.prevPhrases
-        result['continuationTurnSeconds'] = self.continuationTurnSeconds
         return result
 
     def signalRefresh(self):
