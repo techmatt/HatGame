@@ -9,44 +9,53 @@
 	let maxPlayers = 10;
 	let playerIncrement = 2;
 	let playerCount = 1;
+	let teamNamePrefix = "Team ";
 	// define active sections	
 	let startButton = $("#footer .start");
 	let playerSection = $("#players");
-	let addPlayerButton = $("#players .add");
 	let playerCountDisplay = $("#playerCount");
+	// define team template from first team
+	let teamTemplate = $(".team-section").clone(true);
 	// define player template from first player
-	let playerTemplate = $("#players .input-section").clone(true);
-	let removeButton = playerTemplate.children("button.remove.inactive");
-	removeButton.removeClass("inactive"); // make removal active
+	let playerTemplate = $("#players .player-add").clone(true);
+	playerTemplate.addClass("player-section");
+	playerTemplate.children("button.add").addClass("inactive");
+	playerTemplate.children("button.remove").removeClass("inactive");
+	playerTemplate.children(".handle").removeClass("inactive");
 
-	
-	// getGameDict function: returns a gameDict based on visible parameters
+	// getGameDict function: returns a gameDict object based on visible parameters
 	let getGameDict = function() {
 		// get an array of player names
-		let playerInputArray = document.querySelectorAll(".name-text");
-		let playerArray = [].map.call(playerInputArray, function(playerInput) {
-			return playerInput.value;
+		let teamArray = document.querySelectorAll("team-section");
+		let teamObject = [].map.call(teamArray, function(team) {
+			    let playerInputArray = document.querySelectorAll(".name-text");
+			    let playerArray = [].map.call(playerInputArray, function(playerInput) {
+			        return playerInput.value;
+		        });
+		        // filter out any nonexistent player names
+				playerArray = playerArray.filter(function(player) {
+					return player.trim() != "" && player !== undefined;
+				});
+				// check if array has empty strings
+				if(playerArray.length !== playerInputArray.length) {
+					return { error: "Empty name detected. Please provide names for all players" };
+				}
+				// check if array has duplicates
+				if((new Set(playerArray)).size !== playerArray.length) {
+					return { error: "Duplicate name detected. Please provide unique names for all players." };
+				}
+				// check that the number of players is valid
+				if(playerArray.length < minPlayers || playerArray.length > maxPlayers || playerArray.length % 2 !== 0) {
+					return { error: "Invalid number of valid players. Players must be between " + 
+						minPlayers + " and " + maxPlayers + " and player number must be even." };
+				}
+		        return playerArray;
 		});
-		// filter out any nonexistent player names
-		playerArray = playerArray.filter(function(player) {
-			return player.trim() != "" && player !== undefined;
-		});
-		// check if array has empty strings
-		if(playerArray.length !== playerInputArray.length) {
-			return { error: "Empty name detected. Please provide names for all players" };
-		}
-		// check if array has duplicates
-		if((new Set(playerArray)).size !== playerArray.length) {
-			return { error: "Duplicate name detected. Please provide unique names for all players." };
-		}
-		// check that the number of players is valid
-		if(playerArray.length < minPlayers || playerArray.length > maxPlayers || playerArray.length % 2 !== 0) {
-			return { error: "Invalid number of valid players. Players must be between " + 
-			    minPlayers + " and " + maxPlayers + " and player number must be even." };
-		}
+		
+		
 		// build the gameDict object
 		let gameDict = {
-			players: playerArray,
+			teams: teamObject,
 			phrasesPerPlayer: document.querySelector("#wordCount").value,
 			secondsPerTurn: document.querySelector("#turnLength").value,
 			videoURL: document.querySelector("#videoUrl").value
@@ -80,44 +89,60 @@
 		}
 	}
 	
-	// update the player count
-    let updatePlayerCount = function() {
-        playerCount = playerSection.children(".input-section").length;
-        playerCountDisplay.text(playerCount);
+		// newTeam function: adds a new team to the list
+	let addTeam = function(teamName) {
+		let newTeam = teamTemplate.clone();
+		newTeam.children(".team-name").text(teamName);
+		playerSection.append(newTeam);
+	}
+
+	// update the player count and make sure only one blank team displays
+    let cleanUpPlayersAndTeams = function() {
+    	let teams = playerSection.children(".team-section");
+    	let teamIndex = 1;
+    	teams.each(function() {
+    		if($(this).children(".player-section").length === 0) {
+    			this.remove();
+    		} else {
+    			$(this).children(".team-name").text(teamNamePrefix + teamIndex);
+    			teamIndex += 1;
+    		}
+    	});
+    	addTeam(teamNamePrefix + teamIndex);
     }
 	
 	// removePlayer function: removes a player from the list
 	let removePlayer = function() {
-		if( playerCount > minPlayers ) {
-			this.parentNode.remove();
-			updatePlayerCount();
-		} else {
-			alert("The minimum number of players is " + minPlayers + ".");
-		}
+		this.parentNode.remove();
+		cleanUpPlayersAndTeams();
 	}
-	
-	// initialize removePlayer function for template
-	removeButton.click(removePlayer)
 
-	// newPlayer function: adds a new player to the list
-	let newPlayer = function() {
+	// newPlayer function: adds a new player to the list in the same team
+	let addPlayer = function() {
 		if( playerCount < maxPlayers ) {
-			playerTemplate.clone(true).insertBefore(addPlayerButton);
-			updatePlayerCount();
+			// get the new player name and clear it from the add function
+			let newPlayerName = $(this).parent().children(".name-text").val();
+			let currentTeam = $(this).closest(".team-section")
+			if(newPlayerName != "") {
+				$(this).parent().children(".name-text").val(""); // clear the add player input
+				let newPlayer = playerTemplate.clone();
+				newPlayer.children(".name-text").val(newPlayerName);
+				// if a player was just added to an empty team, add a new blank team
+				currentTeam.append(newPlayer);
+				cleanUpPlayersAndTeams();
+			} else {
+				alert("Please enter a player name.");
+			}
 		} else {
 			alert("The maximum number of players is " + maxPlayers + ".");
-		}
-        
+		}   
 	}
 
-	// update the number of players to the expected default
-	for( gix = playerCount; gix < minPlayers; gix+=1 ) {
-		newPlayer();
-	} 
-
 	// event handlers
+	playerSection.on("click", ".remove", removePlayer);
+	playerSection.on("click", ".add", addPlayer);
 	startButton.click(newGame);
-	addPlayerButton.click(newPlayer);
 
-	
+	// cleanup
+	cleanUpPlayersAndTeams();
 })();

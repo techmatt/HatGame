@@ -4,3 +4,31 @@
 	margin-right: 5px;
 	min-height: 2.5em;
 }
+.team-select {
+	color: #ffffff;
+	font-weight: bold;
+	padding: 1px;
+}
+.team-onhover:hover {
+	background-color: #ff0000;
+}
+
+#players {
+	display: flex;
+	flex-direction: column;
+}
+.team-section {
+	display: flex;
+	flex-direction: column;
+}
+button.add {
+	max-width: .5em;
+}
+.handle {
+	padding: .5em;
+	background-color: #aaaaaa;
+	width: 3em;
+	text-align: center;
+	cursor: grab;
+	user-select: none;
+}
