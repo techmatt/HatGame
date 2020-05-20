@@ -145,3 +145,67 @@ button:active {
 .inactive {
     display: none;
 }
+/* === dialog styles === */
+.dialog {
+	max-width: 50%;
+	width: auto;
+	height: auto;
+	position:fixed;
+	display:flex;
+	flex-direction:column;
+	margin:auto;
+	top:50%;
+	left:50%;
+	transform:translate(-50%, -50%);
+	background-color:white;
+	border:3px solid #673ab7;
+	border-radius:.3em;
+	box-shadow: 0 0 40px 100rem #00000066;
+	transition: opacity .2s;
+	opacity: 0;
+}
+.dialog.show {
+	opacity: 100;
+}
+.dialog .close-dialog {
+	top:0px;
+	padding: .3em;
+	background-color: #e00000;
+	color: white;
+	width: 1.5em;
+	height: 1.5em;
+	line-height: .8em;
+	text-align: center;
+	border-bottom-left-radius: .3em;
+	position:fixed;
+	right:0px;
+	cursor: pointer;
+}
+.dialog .dialog-title {
+	text-transform: capitalize;
+	font-size: 1.5em;
+} 
+.dialog .dialog-text {
+	font-size: 1em;
+}
+.dialog .close-dialog:hover {
+	background-color: #c00000;
+}
+.dialog-title, .dialog-text {
+	margin: 0;
+}
+.dialog-text-section {
+	padding: .5em;
+	padding-right: 1.5em;
+}
+/* dialog types */
+
+.dialog.error {
+	border: .1em solid #c00000
+}
+.dialog.warning {
+	border: .1em solid #ffe900
+}
+.dialog.note {
+}
+/* === end dialog styles === */

@@ -36,8 +36,16 @@
 		<section id="footer">
 			<button class="start">Start</button>
 		</section>
+		<div class="dialog">
+			<div class="close-dialog">x</div>
+			<div class="dialog-text-section">
+  				<p class="dialog-text">Dialog text</p>
+			</div>
+		</div>
+
 		<!-- load javascript -->
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+		<script type="text/javascript" src="{{ url_for('static', filename='dialog.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('static', filename='new-game.js') }}"></script>
 	</body>
 </html>

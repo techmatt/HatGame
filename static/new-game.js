@@ -10,27 +10,31 @@
 	let playerIncrement = 2;
 	let playerCount = 1;
 	let teamNamePrefix = "Team ";
+
 	// define active sections	
 	let startButton = $("#footer .start");
 	let playerSection = $("#players");
 	let playerCountDisplay = $("#playerCount");
+
 	// define team template from first team
 	let teamTemplate = $(".team-section").clone(true);
+
 	// define player template from first player
 	let playerTemplate = $("#players .player-add").clone(true);
 	playerTemplate.addClass("player-section");
 	playerTemplate.children("button.add").addClass("inactive");
 	playerTemplate.children("button.remove").removeClass("inactive");
 	playerTemplate.children(".handle").removeClass("inactive");
-
+    
+	
 	// getGameDict function: returns a gameDict object based on visible parameters
 	let getGameDict = function() {
 		// get an array of player names
-		let teamArray = document.querySelectorAll("team-section");
+		let teamArray = document.querySelectorAll(".team-section");
 		let teamObject = [].map.call(teamArray, function(team) {
-			    let playerInputArray = document.querySelectorAll(".name-text");
+			    let playerInputArray = team.querySelectorAll(".player-section");
 			    let playerArray = [].map.call(playerInputArray, function(playerInput) {
-			        return playerInput.value;
+			        return $(playerInput).children('.name-text').val();
 		        });
 		        // filter out any nonexistent player names
 				playerArray = playerArray.filter(function(player) {
@@ -44,14 +48,16 @@
 				if((new Set(playerArray)).size !== playerArray.length) {
 					return { error: "Duplicate name detected. Please provide unique names for all players." };
 				}
-				// check that the number of players is valid
-				if(playerArray.length < minPlayers || playerArray.length > maxPlayers || playerArray.length % 2 !== 0) {
-					return { error: "Invalid number of valid players. Players must be between " + 
-						minPlayers + " and " + maxPlayers + " and player number must be even." };
-				}
 		        return playerArray;
 		});
-		
+
+	    // check that the number of players is valid
+	    /***
+		if(playerArray.length < minPlayers || playerArray.length > maxPlayers || playerArray.length % 2 !== 0) {
+			return { error: "Invalid number of valid players. Players must be between " + 
+				minPlayers + " and " + maxPlayers + " and player number must be even." };
+		}
+		***/
 		
 		// build the gameDict object
 		let gameDict = {
@@ -67,7 +73,7 @@
 		let endpoint = "api/newgame"
 		let gameDict = getGameDict();
 		if(gameDict.error) {
-			alert(gameDict.error);
+			dialog.throwError(gameDict.error);
 		} else {
 			$.ajax({
 				type: "POST",
@@ -77,13 +83,13 @@
 				dataType: "json",
 				success: function(response) {
 					if(response.error) {
-						alert(response.error);
+						dialog.throwError(response.error);
 					} else {
 						window.location = response.gameURL;
 					}
 				},
 				failure: function(xhr, status, error) {
-					alert("Could not connect with server. Please try again or contact support.");
+					dialog.throwError("Could not connect with server. Please try again or contact support.");
 				}
 			});	
 		}
@@ -131,10 +137,10 @@
 				currentTeam.append(newPlayer);
 				cleanUpPlayersAndTeams();
 			} else {
-				alert("Please enter a player name.");
+				dialog.throwError("Please enter a player name.");
 			}
 		} else {
-			alert("The maximum number of players is " + maxPlayers + ".");
+			dialog.throwError("The maximum number of players is " + maxPlayers + ".");
 		}   
 	}
 
