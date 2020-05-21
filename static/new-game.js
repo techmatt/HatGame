@@ -128,13 +128,17 @@
     }
 
     // newPlayer function: adds a new player to the list in the same team
-    let addPlayer = function() {
+    let addPlayer = function(element = false) {
         if (playerCount < maxPlayers) {
+            // get the right element whether the player pressed + or typed enter
+            if(element.type === "click") {
+                element = $(this);
+            }
             // get the new player name and clear it from the add function
-            let newPlayerName = $(this).parent().children(".name-text").val();
-            let currentTeam = $(this).closest(".team-section")
+            let newPlayerName = element.parent().children(".name-text").val();
+            let currentTeam = element.closest(".team-section")
             if (newPlayerName != "") {
-                $(this).parent().children(".name-text").val("");
+                element.parent().children(".name-text").val("");
                 // clear the add player input
                 let newPlayer = playerTemplate.clone();
                 newPlayer.children(".name-text").val(newPlayerName);
@@ -148,6 +152,13 @@
             dialog.throwError("The maximum number of players is " + maxPlayers + ".");
         }
     }
+
+    // keypress handlers (for enter) 
+    $(document).on('keypress',function(e) {
+        if(e.which == 13) { // Enter key
+           addPlayer($(":focus"));
+        }
+    });
 
     // event handlers
     playerSection.on("click", ".remove", removePlayer);

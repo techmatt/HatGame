@@ -30,11 +30,10 @@ let dialog = (function() {
 	    return true;
 	}
     
-    // close if X or outside is clicked
+    // close if X is clicked
 	dialog.on('click', ".close-dialog", hide);
-	$(document).on("click", function() {
-		
-    });
+	// todo: figure out clean way to close if outside is clicked
+	// without causing it to instantly close
     
 	return {
         show: show,
