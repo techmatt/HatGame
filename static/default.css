@@ -85,12 +85,18 @@ img#logo {
     background-color: white;
     min-width: 300px;
     flex-grow: 1;
-    padding: 1em
+    padding: 1em;
+    flex-basis: 50%;
 }
 .input-section {
-    margin-bottom: .3em;
+    margin-top: .3em;
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
+    padding: 0 .3em;
+}
+.input-section:last-child {
+	margin-bottom: .3em;
 }
 input {
 	width: 100%;
@@ -112,21 +118,27 @@ input {
 }
 button, .button {
     border-radius: .3em;
-    box-shadow: .1em .1em #000000;
     padding: .3em;
-	background-color: #4caf50;
-	color: white;
+    background-color: #4caf50;
+    color: white;
     text-align: center;
     font-size: large;
-	margin: auto;
-	border: 0px;
-	min-width: 5em;
-	cursor: pointer;
+    margin: auto;
+    border: 0px;
+    min-width: 5em;
+    cursor: pointer;
 }
 button.remove {
 	background-color: #e00000;
 	max-width: 4em;
 	min-width: 2em;
+	flex-basis: 2em;
+	border-top-left-radius: 0px;
+	border-bottom-left-radius: 0px;
+	box-shadow: none;
+	height: 2em;
+	padding: 0px;
+	font-weight: bold;
 }
 #footer button {
     margin: auto;
@@ -140,10 +152,16 @@ button.remove:hover, .button.remove:hover {
 }
 button:active {
     background-color: #72ce76;
-    box-shadow: .1em .1em #000000 inset;
 }
 .inactive {
     display: none;
+}
+.hidden {
+	margin: .3em .3em;
+	background-color: #00000033;
+}
+.hidden * {
+	opacity: 0%;
 }
 /* === dialog styles === */
 .dialog {
@@ -156,16 +174,18 @@ button:active {
 	margin:auto;
 	top:50%;
 	left:50%;
+	box-shadow: 0px 0px 1000rem 1000rem #00000044;
 	transform:translate(-50%, -50%);
 	background-color:white;
 	border:3px solid #673ab7;
 	border-radius:.3em;
-	box-shadow: 0 0 40px 100rem #00000066;
 	transition: opacity .2s;
 	opacity: 0;
+	pointer-events: none;
 }
 .dialog.show {
 	opacity: 100;
+	pointer-events:auto;
 }
 .dialog .close-dialog {
 	top:0px;
@@ -208,7 +228,5 @@ button:active {
 }
 .dialog.success {
 	border: .1em solid #00a021;
-}
-.dialog.note {
 }
 /* === end dialog styles === */

@@ -10,6 +10,8 @@
     let playerIncrement = 2;
     let playerCount = 1;
     let teamNamePrefix = "Team ";
+    let draggedPlayer = {};
+    let dragIterator = 0;
 
     // define active sections	
     let startButton = $("#footer .start");
@@ -25,6 +27,7 @@
     playerTemplate.children("button.add").addClass("inactive");
     playerTemplate.children("button.remove").removeClass("inactive");
     playerTemplate.children(".handle").removeClass("inactive");
+    playerTemplate.removeClass("player-add");
 
     // getGameDict function: returns a gameDict object based on visible parameters
     let getGameDict = function() {
@@ -51,19 +54,12 @@
                     error: "Duplicate name detected. Please provide unique names for all players."
                 };
             }
-            
+
             return playerArray;
         });
 
         // remove empty from array
         teamArray = teamArray.filter(team => team.length > 0);
-        // check that the number of players is valid
-        /***
-		if(playerArray.length < minPlayers || playerArray.length > maxPlayers || playerArray.length % 2 !== 0) {
-			return { error: "Invalid number of valid players. Players must be between " + 
-				minPlayers + " and " + maxPlayers + " and player number must be even." };
-		}
-		***/
 
         // build the gameDict object
         let gameDict = {
@@ -119,6 +115,8 @@
                 $(this).children(".team-name").text(teamNamePrefix + teamIndex);
                 teamIndex += 1;
             }
+            // clean up player target behavior
+            $(this).removeClass("player-target");
         });
         addTeam(teamNamePrefix + teamIndex);
     }
@@ -158,5 +156,41 @@
 
     // cleanup
     cleanUpPlayersAndTeams();
-}
-)();
+
+    /*** === drag and drop functionality === ***/
+
+    // save the player object when dragged
+    let dragPlayer = function(event) {
+    	draggedPlayer = $(this).closest(".player-section");
+    	draggedPlayer.addClass("hidden");
+    }
+    // move the player when dropped and clean up the object and teams
+    let dropPlayer = function(event) {
+    	$(this).append(draggedPlayer);
+    	draggedPlayer.removeClass("hidden");
+    	draggedPlayer = {};
+    	dragIterator = 0;
+        cleanUpPlayersAndTeams();
+    }
+    // track enter/exit of team divs and
+    // add classes so there's a visual when dragging over a team
+    let dragPlayerEnter = function(event) {
+    	if(!$(this).hasClass("player-target")) {
+    	    $(this).addClass("player-target");
+    	}
+    	dragIterator += 1;
+    }
+    let dragPlayerLeave = function(event) {
+        dragIterator -= 1;
+        if(dragIterator < 1) {
+            $(this).removeClass("player-target");
+            dragIterator = 0;
+        }
+    }
+   
+    // drag and drop event handlers
+    playerSection.on("dragstart", ".handle", dragPlayer);
+    playerSection.on("dragenter", ".team-section", dragPlayerEnter);
+    playerSection.on("dragleave", ".team-section", dragPlayerLeave);
+    playerSection.on("drop", ".team-section", dropPlayer);
+})();

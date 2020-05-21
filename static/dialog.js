@@ -4,9 +4,11 @@ let dialog = (function() {
 	// get the dialog object from the page
 	let dialog = $(".dialog");
 	let dialogText = dialog.children().children(".dialog-text");
+	let activeDialog = false;
 
 	// display dialog
 	let show = function(type, message) {
+		activeDialog = true;
 		dialog.addClass(type);
 		dialogText.text(message);
 	    dialog.addClass("show");
@@ -15,7 +17,10 @@ let dialog = (function() {
 
 	// shortcut to close dialog
 	let hide = function() {
-		dialog.removeClass("show");
+		if(activeDialog === true) {
+			dialog.removeClass("show");
+		}
+		activeDialog = false;
 		return true;
 	}
 
@@ -27,10 +32,8 @@ let dialog = (function() {
     
     // close if X or outside is clicked
 	dialog.on('click', ".close-dialog", hide);
-	$(document).click(function(event) {
-		if (!$(event.target).closest('.dialog').length) {
-			hide();
-		}
+	$(document).on("click", function() {
+		
     });
     
 	return {
