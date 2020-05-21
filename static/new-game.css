@@ -16,10 +16,20 @@
 #players {
 	display: flex;
 	flex-direction: column;
+	overflow-y: auto;
+	max-height: 100%;
 }
 .team-section {
 	display: flex;
 	flex-direction: column;
+	border: .1em outset #aaaaaa;
+	margin-bottom: .3em;
+	border-radius:  .3em;
+	padding: .3em;
+}
+.team-name {
+	margin-bottom: 0px;
+	margin-top:0px;
 }
 button.add {
 	max-width: .5em;
