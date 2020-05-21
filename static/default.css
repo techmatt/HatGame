@@ -11,7 +11,7 @@ body {
     padding: 5px;
     max-width: 1000px;
     margin: auto;
-
+    overflow-y: scroll;
 }
 #header { 
     background-color: #673AB7;
@@ -127,6 +127,7 @@ button, .button {
     border: 0px;
     min-width: 5em;
     cursor: pointer;
+    user-select: none;
 }
 button.remove {
 	background-color: #e00000;
@@ -193,10 +194,9 @@ button:active {
 	background-color: #e00000;
 	color: white;
 	width: 1.5em;
-	height: 1.5em;
-	line-height: .8em;
+	height: 100%;
+	line-height: calc(100% + .5em);
 	text-align: center;
-	border-bottom-left-radius: .3em;
 	position:fixed;
 	right:0px;
 	cursor: pointer;
@@ -216,7 +216,7 @@ button:active {
 }
 .dialog-text-section {
 	padding: .5em;
-	padding-right: 1.5em;
+	padding-right: 2em;
 }
 /* dialog types */
 

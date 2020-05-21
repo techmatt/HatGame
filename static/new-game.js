@@ -198,10 +198,17 @@
             dragIterator = 0;
         }
     }
+    let dragPlayerEnd = function(event) {
+        draggedPlayer.removeClass("hidden");
+        draggedPlayer = {};
+    	dragIterator = 0;
+        cleanUpPlayersAndTeams();
+    }
    
     // drag and drop event handlers
     playerSection.on("dragstart", ".handle", dragPlayer);
     playerSection.on("dragenter", ".team-section", dragPlayerEnter);
     playerSection.on("dragleave", ".team-section", dragPlayerLeave);
     playerSection.on("drop", ".team-section", dropPlayer);
+    playerSection.on("dragend", dragPlayerEnd); 
 })();

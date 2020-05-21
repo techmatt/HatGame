@@ -18,8 +18,9 @@
 #players {
 	display: flex;
 	flex-direction: column;
-	overflow-y: auto;
+	overflow: hidden;
 	max-height: 100%;
+	min-height: calc(100% + 1em);
 }
 .team-section {
 	display: flex;
@@ -30,27 +31,50 @@
 	transition: border-color .2s;
 	box-shadow: 0.1em 0.1em .1em #cccccc;
 }
-.team-section.player-target .player-add:after{
-	content: "\AMove Player";
-	height: 2em;
+.player-add, .player-add>* {
+  visibility: hidden;
+  opacity: 0;
+  max-height: 0em;
+  transition: opacity 0.3s ease-out, max-height 0.3s ease-out;
+}
+.player-add:focus-within, 
+.player-add:focus-within>*, 
+.team-section:hover .player-add,
+.team-section:hover .player-add>*,
+.team-section.player-target .player-add,
+.team-section.player-target .player-add>*{
+	visibility: visible;
+	max-height: 5em;
+	opacity: 1;
+}
+.team-section .team-name:after{
+	content: "Move Player";
+	height: 0em;
+	visibility: hidden;
 	background-color: #c1ffe7;
 	float: left;
 	clear: both;
 	line-height: 2em;
-	text-align:  center;
+	text-align: center;
 	color: black;
-	border: .1em dotted #ccc;
+	border: 0em dotted #ccc;
 	flex-basis: 100%;
+	transition: height .3s ease-out;
+}
+.team-section.player-target .player-add:after {
+	height: 2em;
+	visibility: visible;
 	margin-top: .3em;
+	border: .1em dotted #ccc;
 }
 .team-name {
 	margin-bottom: 0px;
 	margin-top:0px;
-	padding: 0 .3em;
+	padding: .2em .3em;
 	background-color: #673ab7;
 	color: white;
 	font-weight: normal;
-	font-size: 1.5em;
+	font-size: 1.3em;
 	transition: background-color .2s;
 	user-select: none;
 }
