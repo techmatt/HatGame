@@ -201,10 +201,13 @@ button:active {
 /* dialog types */
 
 .dialog.error {
-	border: .1em solid #c00000
+	border: .1em solid #c00000;
 }
 .dialog.warning {
-	border: .1em solid #ffe900
+	border: .1em solid #ffe900;
+}
+.dialog.success {
+	border: .1em solid #00a021;
 }
 .dialog.note {
 }

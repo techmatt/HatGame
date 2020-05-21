@@ -48,6 +48,10 @@
 				if((new Set(playerArray)).size !== playerArray.length) {
 					return { error: "Duplicate name detected. Please provide unique names for all players." };
 				}
+		        // check if team is empty
+		        if(playerArray.length < 1) {
+		        	team.delete;
+		        }
 		        return playerArray;
 		});
 

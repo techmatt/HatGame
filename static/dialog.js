@@ -24,9 +24,15 @@ let dialog = (function() {
 	    show("error", message);
 	    return true;
 	}
-
+    
+    // close if X or outside is clicked
 	dialog.on('click', ".close-dialog", hide);
-	
+	$(document).click(function(event) {
+		if (!$(event.target).closest('.dialog').length) {
+			hide();
+		}
+    });
+    
 	return {
         show: show,
         hide: hide,
