@@ -28,8 +28,8 @@
 	border: .1em solid #673ab7;
 	margin-bottom: .3em;
 	border-radius:  .3em;
+	box-shadow: 0.1em 0.1em 0.1em #00000033;
 	transition: border-color .2s;
-	box-shadow: 0.1em 0.1em .1em #cccccc;
 }
 .player-add, .player-add>* {
   visibility: hidden;
