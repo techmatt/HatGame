@@ -47,7 +47,7 @@
 	max-height: 5em;
 	opacity: 1;
 }
-.team-section .team-name:after{
+.team-section .player-add:after{
 	content: "Move Player";
 	height: 0em;
 	visibility: hidden;
