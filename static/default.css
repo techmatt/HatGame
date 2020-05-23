@@ -166,10 +166,7 @@ button:active {
 .inactive {
     display: none;
 }
-.hidden {
-	margin: .3em .3em;
-	background-color: #00000033;
-}
+
 .hidden * {
 	opacity: 0%;
 }

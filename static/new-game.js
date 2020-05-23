@@ -119,6 +119,7 @@
             $(this).removeClass("player-target");
         });
         addTeam(teamNamePrefix + teamIndex);
+        $(playerSection).addClass("not-dragging");
     }
 
     // removePlayer function: removes a player from the list
@@ -172,13 +173,14 @@
 
     // save the player object when dragged
     let dragPlayer = function(event) {
+    	playerSection.removeClass("not-dragging");
     	draggedPlayer = $(this).closest(".player-section");
     	draggedPlayer.addClass("hidden");
     }
     // move the player when dropped and clean up the object and teams
     let dropPlayer = function(event) {
     	$(this).append(draggedPlayer);
-    	draggedPlayer.removeClass("hidden");
+    	$(draggedPlayer).removeClass("hidden");
     	draggedPlayer = {};
     	dragIterator = 0;
         cleanUpPlayersAndTeams();

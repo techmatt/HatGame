@@ -35,21 +35,25 @@
   visibility: hidden;
   opacity: 0;
   max-height: 0em;
-  transition: opacity 0.3s ease-out, max-height 0.3s ease-out;
+  transition: opacity 0.1s ease-out, max-height 0.1s ease-out;
+  margin-top: 0em;
 }
-.player-add:focus-within, 
-.player-add:focus-within>*, 
-.team-section:hover .player-add,
-.team-section:hover .player-add>*,
-.team-section.player-target .player-add,
-.team-section.player-target .player-add>*{
+.not-dragging .player-add:focus-within, 
+.not-dragging .player-add:focus-within>*, 
+.not-dragging .team-section:hover .player-add,
+.not-dragging .team-section:hover .player-add>* {
 	visibility: visible;
 	max-height: 5em;
 	opacity: 1;
 }
-.team-section .player-add:after{
+.not-dragging .player-add:focus-within,
+.not-dragging .team-section:hover .player-add {
+	margin-top: .3em;
+}
+.team-section:after{
 	content: "Move Player";
 	height: 0em;
+	max-height: 0em;
 	visibility: hidden;
 	background-color: #c1ffe7;
 	float: left;
@@ -59,12 +63,14 @@
 	color: black;
 	border: 0em dotted #ccc;
 	flex-basis: 100%;
-	transition: height .3s ease-out;
+	transition: height .1s ease-out, max-height .1s ease-out;
+	margin: 0em .3em;
 }
-.team-section.player-target .player-add:after {
+.team-section.player-target:after {
 	height: 2em;
+	max-height: 2em;
 	visibility: visible;
-	margin-top: .3em;
+    margin-bottom: .3em;
 	border: .1em dotted #ccc;
 }
 .team-name {
@@ -95,4 +101,9 @@ button.add {
 	cursor: grab;
 	user-select: none;
 	flex-basis: 3em;
+}
+
+.hidden {
+	margin: .3em .3em .0em .3em;
+	background-color: #00000033;
 }
