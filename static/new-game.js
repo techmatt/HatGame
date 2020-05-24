@@ -16,7 +16,7 @@
     // define active sections	
     let startButton = $("#footer .start");
     let playerSection = $("#players");
-    let playerCountDisplay = $("#playerCount");
+    let randomizeButton = $(".randomize");
 
     // define team template from first team
     let teamTemplate = $(".team-section").clone(true);
@@ -70,6 +70,7 @@
         }
         return gameDict;
     }
+
     // newGame function: creates a new game and sends client to its URL
     let newGame = function() {
         let endpoint = "api/newgame"
@@ -154,6 +155,27 @@
         }
     }
 
+    // shuffles an array (of players, in this case)
+    let shuffleArray = function(playerArray) {
+        for(let gix = playerArray.length - 1; gix > 0; gix-=1) {
+            let urz = Math.floor(Math.random() * gix);
+            let temp = playerArray[gix];
+            playerArray[gix] = playerArray[urz];
+            playerArray[urz] = temp;
+        }
+        return playerArray;
+    }
+    // randomize function
+    let randomizePlayers = function() {
+        let gameDict = getGameDict();
+        let teams = gameDict.teams;
+        let playerNames = gameDict.teams.flat();
+        playerNames = shuffleArray(playerNames);
+        $(".player-section .name-text").each(function(gix, textbox) {
+            $(textbox).val(playerNames[gix]);
+        });
+    }
+
     // keypress handlers (for enter) 
     $(document).on('keypress',function(e) {
         if(e.which == 13) { // Enter key
@@ -165,18 +187,19 @@
     playerSection.on("click", ".remove", removePlayer);
     playerSection.on("click", ".add", addPlayer);
     startButton.click(newGame);
+    randomizeButton.click(randomizePlayers);
 
     // cleanup
     cleanUpPlayersAndTeams();
 
     /*** === drag and drop functionality === ***/
-
     // save the player object when dragged
     let dragPlayer = function(event) {
     	playerSection.removeClass("not-dragging");
     	draggedPlayer = $(this).closest(".player-section");
     	draggedPlayer.addClass("hidden");
     }
+
     // move the player when dropped and clean up the object and teams
     let dropPlayer = function(event) {
     	$(this).append(draggedPlayer);
@@ -185,6 +208,7 @@
     	dragIterator = 0;
         cleanUpPlayersAndTeams();
     }
+
     // track enter/exit of team divs and
     // add classes so there's a visual when dragging over a team
     let dragPlayerEnter = function(event) {
@@ -201,7 +225,7 @@
         }
     }
     let dragPlayerEnd = function(event) {
-        draggedPlayer.removeClass("hidden");
+        $(draggedPlayer).removeClass("hidden");
         draggedPlayer = {};
     	dragIterator = 0;
         cleanUpPlayersAndTeams();
