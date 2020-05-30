@@ -326,17 +326,26 @@ def createDebugMultiWordGame():
     game_id='debug_multi_word_phase'
     game = GameSession(
         id=game_id, 
-        teamPlayerLists=[ ['graham', 'matt'], ['nik', 'peter'] ],
-        phrasesPerPlayer=3, 
-        secondsPerTurn=5,
+        teamPlayerLists=[
+          ['graham', 'matt', 'amanda', 'ronan'], 
+          ['nik', 'peter', 'jason'] 
+        ],
+        phrasesPerPlayer=2, 
+        secondsPerTurn=10,
         videoURL='http://zoom.com')
     
-    game.recordPlayerPhrases('graham', ['The Axiom of Choice', 'Uncountable', 'Ripple Shuffle'])
-    game.recordPlayerPhrases('nik', ['Volcano', 'Google', 'Mitch McConnell'])
-    game.recordPlayerPhrases('matt', ['Adobe', 'Entropy Sphere', 'Heat Death'])
-    game.recordPlayerPhrases('peter', ['Cat', 'Stripe', 'Optimization'])
-    # For reproducibility, let''s make it Peter's turn and link to that
-    game.activePlayerIdx = 3
+    game.recordPlayerPhrases('graham', ['The Axiom of Choice', 'Uncountable'])
+    game.recordPlayerPhrases('matt', ['Adobe', 'Entropy Sphere'])
+    game.recordPlayerPhrases('amanda', ['3D printer', 'Pascal'])
+    game.recordPlayerPhrases('ronan', ['fossil', 'man'])
+    game.recordPlayerPhrases('nik', ['Volcano', 'Google'])
+    game.recordPlayerPhrases('peter', ['Cat', 'Stripe', ])
+    game.recordPlayerPhrases('jason', ['Lego', 'chillin'])
+    
+    # For reproducibility, let's make it Peter's turn, with Amanda next
+    game.activeTeamIdx = 1
+    game.teams[0].activePlayerIdx = 2
+    game.teams[1].activePlayerIdx = 1
     activeGames[game_id] = game
     print('created game ' + game_id)
     example_game_messages.append('Example page to start a turn: http://127.0.0.1:5000/games/{}/peter'.format(game_id))
