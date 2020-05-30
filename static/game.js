@@ -64,9 +64,7 @@ class PhraseListCreator extends React.Component {
   //   onPhraseListCreation - function to call once phrases are collected that takes phraseList
   constructor(props) {
     super(props);
-    console.log("creating a PhraseListCreator for %o phrases", props.phraseCount);
     this.textInputRefs = Array(props.phraseCount).fill(0).map(x => React.createRef());
-    console.log("text input refs %o",  this.textInputRefs);
   }
   
   handleSubmit(event) {
@@ -85,7 +83,7 @@ class PhraseListCreator extends React.Component {
       e(
         'div',
         { className: 'phrase_input_prompt' },
-        `Please enter ${this.props.phraseCount} phrases that most players will recognize.`
+        `Please enter ${this.props.phraseCount} words or short phrases that most players will recognize.`
       ),
       e(
 	      'form',
@@ -335,6 +333,21 @@ class HatGameApp extends React.Component {
     return this.state.mainPhase == 'GameMainPhase.Done';
   }
 
+  mainPhaseText() {
+    switch (this.state.mainPhase) {
+      case "GameMainPhase.Write":
+        return 'Word Creation'
+      case "GameMainPhase.MultiWord":
+        return 'Round One: Many-Word Clues'
+      case "GameMainPhase.SingleWord":
+        return 'Round Two: Single-Word Clues'
+      case "GameMainPhase.Charade":
+        return 'Round Three: Charades'
+      case "GameMainPhase.Done":
+        return 'Game Complete'
+    }
+  }
+
   renderInWritePhase() {
     const viewingPlayerIsDoneWriting = this.state.playerWritingStatus[this.props.player];
     
@@ -498,7 +511,7 @@ class HatGameApp extends React.Component {
         return e(
           'div',
           { className: "game_done_text" },
-          'Game complete, thanks for playing!'
+          'Thanks for playing!'
         );
       default:
         return e(
@@ -526,7 +539,7 @@ class HatGameApp extends React.Component {
       null,
       e('div',
         {className: 'main_phase_text'},
-        this.state.mainPhase
+        this.mainPhaseText()
       ),
       e('div',
         {className: 'hat_size_text'},
