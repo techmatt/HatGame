@@ -109,10 +109,9 @@ class GameSession:
             activePlayerIndexPerTeam.append(team.activePlayerIdx)
 
         playerWritingStatus = {}
-        if self.mainPhase == GameMainPhase.Write:
-            for team in self.teams:
-                for player in team.players:
-                    playerWritingStatus[player.id] = (len(player.phrases) == self.phrasesPerPlayer)
+        for team in self.teams:
+            for player in team.players:
+                playerWritingStatus[player.id] = (len(player.phrases) == self.phrasesPerPlayer)
 
         secondsRemaining = -1.0
         #if self.turnStartTime is not None:
