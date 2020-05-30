@@ -8,13 +8,13 @@
 
 /* And the LORD did see the table, and it was was good. But all things strive, and the table sought to better itself, and became a BLOCK. */
 .player_list_table {
-  margin: .3em 0;
+  margin: .3em auto;
 }
 
 .player_list_table, .player_list_table * {
   width: 100%;
   display:  flex;
-  /*justify-content: space-around; */
+  justify-content: space-around;
   align-content: space-around;
   flex-wrap: wrap;
 }
@@ -47,6 +47,7 @@ tr {
    animation-iteration-count: infinite;
    animation-direction: alternate;
    animation-timing-function:linear;
+   justify-content: center;
 }
 @keyframes blink {
    0% {
@@ -58,7 +59,7 @@ tr {
    }
  }
  .active_player_in_list::after { 
-  content: " - clue giver";
+  content: ": clue giver";
 }
 
 /* The "on deck" player is the one who will play next once
@@ -66,9 +67,10 @@ tr {
  .on_deck_player_in_list { 
   background-color: #fff;
   opacity:100%;
+  justify-content: center;
  }
  .on_deck_player_in_list::after { 
-  content: " - up next";
+  content: ": up next";
 }
  /* if needed: .passive_player_in_list */
  /* if needed:  .score_display */
