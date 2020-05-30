@@ -1,32 +1,48 @@
+'use strict';
 
 const e = React.createElement;
 
 const textIndicatingPlayerIsWriting = ' - writing'; // ✍️
 
-// Displays the list of players, with css to indicate the active player
+// Displays the list of players on each team, with css to indicate the active player
 // props:
-//   players - player list
-//   activePlayerIdx - active player to highlight, or -1 for no hilight
-//   playerHasCompletedPhrases - list of bools indicating player is done writing phrases
+//   teams - list of lists of player names
+//   activePlayerIndexPerTeam - active player per team to highlight, or -1 for no highlight
+//   playerWritingStatus - dict from player name to boolean, indicating the player is still writing
+//                       - if the dict is missing a player name, assume they're not writing
+//  activeTeamIndex - the index of the team currently playing
 function PlayerList(props) {
   console.log("Rendering PlayerList with props %o", props);
-  if(typeof props.players == 'undefined') {
+  if (typeof props.teams == 'undefined') {
     console.log("no player list to render yet");
-    return e('div', null, ''); // Special case when we haven't loaded player list
+    return e('div', null, ''); // Special case when we haven't loaded teams
   } else {
     return e(
       'table',
-      {className: 'player_list_table'},
+      { className: 'player_list_table' },
       e('tbody', null,
-        props.players.map( (player, i) => {
-          const playerStatus = (i == props.activePlayerIdx ? 'active' : 'passive');
+        props.teams.map((team, teamI) => {
           return e(
-            'tr', 
-            {key: player}, 
-            e('td', 
-            {className: `${playerStatus}_player_in_list`},
-            player + (props.playerHasCompletedPhrases[i] ? '' : textIndicatingPlayerIsWriting)))
-          }
+            'tr',
+            { key: team },
+            team.map((player, playerI) => {
+              const playerOnDeck = (playerI == props.activePlayerIndexPerTeam[teamI]);
+              const teamIsActive = (teamI == props.activeTeamIndex)
+              const playerStatus = (playerOnDeck ?
+                (teamIsActive ? 'active' : 'on_deck') : 'passive')
+              const playerDoneWriting = props.playerWritingStatus[player]
+              const textForWriting = playerDoneWriting ? '' : textIndicatingPlayerIsWriting;
+              return e('td',
+                {
+                  key: player,
+                  className: `${playerStatus}_player_in_list`
+                },
+                player + textForWriting)
+            }
+            ),
+            e('td', null, 'score: 42')
+          )
+        }
         )
       )
     )
@@ -205,7 +221,7 @@ class WordListConfirmer extends React.Component {
               }
             ),
             e('label',
-              {for: "checkbox " + word},
+              {htmlFor: "checkbox " + word},
               word)
           )
       ),
@@ -295,29 +311,20 @@ class HatGameApp extends React.Component {
     {acceptedPhrases: phrases});
   }
 
-  viewingPlayerIndex() {
-    return this.state.players.indexOf(this.props.player);
+
+  activePlayer() {
+    // activeTeam is a list of player names
+    const activeTeam = this.state.teams[this.state.activeTeamIndex];
+    const relevantIndex = this.state.activePlayerIndexPerTeam[this.state.activeTeamIndex];
+    return activeTeam[relevantIndex];
   }
 
   isItMyTurn() {
-    const viewingPlayerIndex = this.viewingPlayerIndex();
-    if (viewingPlayerIndex == -1) {
-      const message = (
-        `Game is in a weird state where viewing player ${this.props.player} ` + 
-        `is not in player list ${this.state.players}.  Please double check your url.`
-      );
-      alert(message);
-    };
-    console.log("Player list %o", this.state.players);
-    console.log("index of player %o is %o; current player index is %o",
-      this.state.players, viewingPlayerIndex, this.state.activePlayerIdx);
-    return viewingPlayerIndex == this.state.activePlayerIdx;
+    return this.props.player == this.activePlayer();
   }
 
   renderInWritePhase() {
-    const viewingPlayerIsDoneWriting = this.state.playerHasCompletedPhrases[this.viewingPlayerIndex()];
-    console.log("Viewing player index %o, list %o",
-      this.viewingPlayerIndex(), this.state.playerHasCompletedPhrases);
+    const viewingPlayerIsDoneWriting = this.state.playerWritingStatus[this.props.player];
     
     if (viewingPlayerIsDoneWriting) {
       return e(
@@ -367,13 +374,12 @@ class HatGameApp extends React.Component {
         )
       )
     } else {
-      const activePlayer = this.state.players[this.state.activePlayerIdx];
       return e(
         'div', null,
         this.renderPreviousRoundPhraseList(),
         e(
           'div', { className: 'waiting_for_player_to_start_text' },
-          `Waiting for current player ${activePlayer} to start game`
+          `Waiting for current player ${this.activePlayer()} to start their turn`
         )
       )
     }
@@ -425,12 +431,10 @@ class HatGameApp extends React.Component {
         }
       )
     } else {
-      const activePlayer = this.state.players[this.state.activePlayerIdx];
       return e(
         'div', null,
-        `Waiting for current player ${activePlayer} to confirm words`
+        `Waiting for current player ${this.activePlayer()} to confirm words`
       )
-      // TODO Enter state of waiting for server
     }
   }
 
@@ -482,9 +486,11 @@ class HatGameApp extends React.Component {
   }
 
   hatSizeMessage() {
-    if (this.state.hat && this.state.players) {
+    if (this.state.hat && this.state.team) {
       const countInHat = this.state.hat.length;
-      const hatCapacity = this.state.phrasesPerPlayer * this.state.players.length;
+      const playerCount = this.state.team.map( t => t.length).reduce((a, b) => a + b)
+      console.log("playerCount %o", playerCount);
+      const hatCapacity = this.state.phrasesPerPlayer * playerCount;
       return `Words in hat: ${countInHat} of ${hatCapacity}`;
     } else {
       return undefined; // No hat, just create empty div
@@ -505,9 +511,10 @@ class HatGameApp extends React.Component {
       ),
       e(PlayerList,
         {
-          players: this.state.players,
-          activePlayerIdx: this.state.activePlayerIdx,
-          playerHasCompletedPhrases: this.state.playerHasCompletedPhrases,
+          teams: this.state.teams,
+          activePlayerIndexPerTeam: this.state.activePlayerIndexPerTeam,
+          playerWritingStatus: this.state.playerWritingStatus,
+          activeTeamIndex: this.state.activeTeamIndex,
         }
       ),
       this.renderPhaseSpecificUI()
