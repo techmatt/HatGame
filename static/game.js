@@ -11,6 +11,7 @@ const textIndicatingPlayerIsWriting = ' - writing'; // ✍️
 //   playerWritingStatus - dict from player name to boolean, indicating the player is still writing
 //                       - if the dict is missing a player name, assume they're not writing
 //  activeTeamIndex - the index of the team currently playing
+// scores - optional list of scores for each team; if given will be shown
 function PlayerList(props) {
   console.log("Rendering PlayerList with props %o", props);
   if (typeof props.teams == 'undefined') {
@@ -22,6 +23,13 @@ function PlayerList(props) {
       { className: 'player_list_table' },
       e('tbody', null,
         props.teams.map((team, teamI) => {
+          const scoreElement = (props.scores ?
+            e('td',
+              { className: 'score_display' },
+              `score: ${props.scores[teamI]}`
+            )
+            : undefined
+          );
           return e(
             'tr',
             { key: team },
@@ -40,7 +48,7 @@ function PlayerList(props) {
                 player + textForWriting)
             }
             ),
-            e('td', null, 'score: 42')
+            scoreElement
           )
         }
         )
@@ -323,6 +331,10 @@ class HatGameApp extends React.Component {
     return this.props.player == this.activePlayer();
   }
 
+  shouldDisplayScores() {
+    return this.state.mainPhase == 'GameMainPhase.Done';
+  }
+
   renderInWritePhase() {
     const viewingPlayerIsDoneWriting = this.state.playerWritingStatus[this.props.player];
     
@@ -475,7 +487,7 @@ class HatGameApp extends React.Component {
         return e(
           'div',
           { className: "game_done_text" },
-          `Game complete, thanks for playing! Scores: ${this.state.scores}`
+          'Game complete, thanks for playing!'
         );
       default:
         return e(
@@ -515,6 +527,7 @@ class HatGameApp extends React.Component {
           activePlayerIndexPerTeam: this.state.activePlayerIndexPerTeam,
           playerWritingStatus: this.state.playerWritingStatus,
           activeTeamIndex: this.state.activeTeamIndex,
+          scores: this.shouldDisplayScores() ? this.state.scores : undefined,
         }
       ),
       this.renderPhaseSpecificUI()
