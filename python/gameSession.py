@@ -106,7 +106,11 @@ class GameSession:
                 #allPlayersList.append(player.id)
             teamList.append(teamPlayerList)
             teamScores.append(team.score)
-            activePlayerIndexPerTeam.append(team.activePlayerIdx)
+            if self.mainPhase in [GameMainPhase.Write, GameMainPhase.Done]:
+                # In this case, don't display an active player
+                activePlayerIndexPerTeam.append(-1)
+            else:
+                activePlayerIndexPerTeam.append(team.activePlayerIdx)
 
         playerWritingStatus = {}
         for team in self.teams:

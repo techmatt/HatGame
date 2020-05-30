@@ -319,7 +319,7 @@ class HatGameApp extends React.Component {
     {acceptedPhrases: phrases});
   }
 
-
+  // returns the name of the active player
   activePlayer() {
     // activeTeam is a list of player names
     const activeTeam = this.state.teams[this.state.activeTeamIndex];
@@ -355,6 +355,16 @@ class HatGameApp extends React.Component {
     }
   }
 
+  messageAboutContinuationTurn() {
+    console.log('seconds: %o %o', this.state.secondsRemaining, this.state.secondsPerTurn);
+    if (this.state.secondsRemaining < this.state.secondsPerTurn) {
+      return `${this.activePlayer()} gets to continue their turn with ` + 
+      `${Math.round(this.state.secondsRemaining)} seconds remaining`
+    } else {
+      return undefined // empty element
+    }
+  }
+  
   renderPreviousRoundPhraseList() {
     if (this.state.prevPhrases && this.state.prevPhrases.length > 0)
       return e(
@@ -365,7 +375,8 @@ class HatGameApp extends React.Component {
           this.state.prevPhrases.map(phrase =>
             e('li', { key: phrase }, phrase)
           )
-        )
+        ),
+        this.messageAboutContinuationTurn()
       )
     else
       // no previous phrases, just return empty div, 
@@ -412,7 +423,7 @@ class HatGameApp extends React.Component {
         null,
         e(CountdownTimer,
           {
-            initialSeconds: this.state.secondsPerTurn,
+            initialSeconds: this.state.secondsRemaining,
             timerExpirationCallback: this.handleTimerExpiration.bind(this)
           }
         ),
