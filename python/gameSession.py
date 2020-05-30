@@ -91,6 +91,7 @@ class GameSession:
         self.activeTeamIdx = -1
         self.prevPhrasesPlayerName = ''
         self.prevPhrases = []
+        self.prevPhrase = None
         self.continuationTurnSeconds = 0.0
     
     def getStateDict(self):
@@ -148,6 +149,7 @@ class GameSession:
         result['activePlayerIndexPerTeam'] = activePlayerIndexPerTeam
         result['prevPhrasesPlayerName'] = self.prevPhrasesPlayerName
         result['prevPhrases'] = self.prevPhrases
+        result['prevPhrase'] = self.prevPhrase
         return result
 
     def signalRefresh(self):
@@ -250,6 +252,9 @@ class GameSession:
 
         self.subPhase = GameSubPhase.ConfirmingPhrases
 
+    def recordPrevPhrase(self, prevPhrase):
+        self.prevPhrase = prevPhrase
+
     def confirmPhrases(self, playerID, acceptedPhrases):
         self.log(playerID + ' assigning phrases')
         self.log('accepted: ' + str(acceptedPhrases))
@@ -268,6 +273,7 @@ class GameSession:
             
         self.prevPhrasesPlayerName = activePlayer.id
         self.prevPhrases = copy.copy(acceptedPhrases)
+        self.prevPhrase = None # Don't carry-over prevPhrase to next turn
 
         shouldAdvancePlayer = True
         if len(self.phrasesInHat) == 0:

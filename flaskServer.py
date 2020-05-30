@@ -276,6 +276,18 @@ def endTurn(gameId, playerId):
     game.signalRefresh()
     return 'turn ended'
 
+@app.route('/games/<gameId>/prevphrase/<prevPhrase>', methods=['POST'])
+def prevPhrase(gameId, prevPhrase):
+    print(f"Server got phrase '{prevPhrase}'")
+    try:
+        game = activeGames[gameId]
+        game.recordPrevPhrase(prevPhrase)
+        game.signalRefresh()
+    except err:
+        traceback.print_exc()
+        return ErrorResponse(err)
+    return 'phrase received'
+
 @app.route('/games/<gameId>/<playerId>/confirmphrases', methods=['POST'])
 def confirmPhrases(gameId, playerId):
     # params:

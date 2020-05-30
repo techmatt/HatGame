@@ -297,6 +297,8 @@ class HatGameApp extends React.Component {
     this.setState((state, props) => ({
       wordsClicked: state.wordsClicked.concat([word]),
     }));
+    const endpoint = `/games/${this.props.gameId}/prevphrase/${word}`;
+    this.postData(endpoint, null);
   }
 
   endTurn() {
@@ -448,12 +450,19 @@ class HatGameApp extends React.Component {
         )
       )
     } else {
-      return e(CountdownTimer,
-        {
-          initialSeconds: this.state.secondsRemaining,
-          timerExpirationCallback: this.handleTimerExpiration.bind(this)
-        }
-      )
+      return e('div', null,
+        e(CountdownTimer,
+          {
+            initialSeconds: this.state.secondsRemaining,
+            timerExpirationCallback: this.handleTimerExpiration.bind(this)
+          }
+        ),
+        this.state.prevPhrase ? e('div',
+         {className: 'previous_phrase'},
+         this.state.prevPhrase
+        )
+        : undefined // empty element if no previous phrase
+      );
     }
   }
 
