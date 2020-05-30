@@ -1,6 +1,109 @@
 /* styles for the new-game page */
 .name-text {
 	width: 100%;
-	margin-right: 5px;
-	min-height: 2.5em;
+	margin-right: 0px;
+	min-height: 2em;
+	flex-basis: 10rem;
+	flex-grow: 1;
+}
+.team-select {
+	color: #ffffff;
+	font-weight: bold;
+	padding: 1px;
+}
+.team-onhover:hover {
+	background-color: #ff0000;
+}
+
+#players {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	max-height: 100%;
+	min-height: calc(100% + 1em);
+}
+.team-section {
+	display: flex;
+	flex-direction: column;
+	border: .1em solid #673ab7;
+	margin-bottom: .3em;
+	border-radius:  .3em;
+	box-shadow: 0.1em 0.1em 0.1em #00000033;
+	transition: border-color .2s;
+}
+.player-add, .player-add>* {
+  visibility: hidden;
+  opacity: 0;
+  max-height: 0em;
+  transition: opacity 0.1s ease-out, max-height 0.1s ease-out;
+  margin-top: 0em;
+}
+.not-dragging .player-add:focus-within, 
+.not-dragging .player-add:focus-within>*, 
+.not-dragging .team-section:hover .player-add,
+.not-dragging .team-section:hover .player-add>* {
+	visibility: visible;
+	max-height: 5em;
+	opacity: 1;
+}
+.not-dragging .player-add:focus-within,
+.not-dragging .team-section:hover .player-add {
+	margin-top: .3em;
+}
+.team-section:after{
+	content: "Move Player";
+	height: 0em;
+	max-height: 0em;
+	visibility: hidden;
+	background-color: #c1ffe7;
+	float: left;
+	clear: both;
+	line-height: 2em;
+	text-align: center;
+	color: black;
+	border: 0em dotted #ccc;
+	flex-basis: 100%;
+	transition: height .1s ease-out, max-height .1s ease-out;
+	margin: 0em .3em;
+}
+.team-section.player-target:after {
+	height: 2em;
+	max-height: 2em;
+	visibility: visible;
+    margin-bottom: .3em;
+	border: .1em dotted #ccc;
+}
+.team-name {
+	margin-bottom: 0px;
+	margin-top:0px;
+	padding: .2em .3em;
+	background-color: #673ab7;
+	color: white;
+	font-weight: normal;
+	font-size: 1.3em;
+	transition: background-color .2s;
+	user-select: none;
+}
+button.add {
+	flex-basis: 2em;
+	min-width: auto;
+	border-top-left-radius: 0px;
+	border-bottom-left-radius: 0px;
+	box-shadow: none;
+	height: 2em;
+	font-weight: bold;
+}
+.handle {
+	padding: .5em;
+	background-color: #aaaaaa;
+	width: 3em;
+	text-align: center;
+	cursor: grab;
+	user-select: none;
+	flex-basis: 3em;
+}
+
+.hidden {
+	margin: .3em .3em .0em .3em;
+	background-color: #00000033;
 }

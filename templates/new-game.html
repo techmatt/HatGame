@@ -6,13 +6,19 @@
 	<body>
 		{% include 'header.html' %}
 		<section id="main">
-			<div id="players" class="flex-window">
-				<h1>Players (<span id="playerCount">1</span>)</h1>
-				<div class="input-section">
-					<input class="name-text" type="text"></input>
-					<button tabindex="-1" class="remove inactive">x</button>
+			<div id="players" class=".not-dragging flex-window">
+				<h1>Players</h1>
+				<div class="team-section" ondragover="event.preventDefault()">
+					<h1 class="team-name"></h1>
+					<div class="player-add input-section">
+						<div class="handle inactive" draggable="true">=</div>
+						<input class="name-text" type="text"></input>
+						<button class="add">+</button>
+						<button tabindex="-1" class="remove inactive">x</button>
+					</div>
 				</div>
-				<button class="add">Add Player</button>
+			</div>
+
 			</div>
 			<div id="optionList" class="flex-window">
 				<h1>Options</h1>
@@ -29,9 +35,18 @@
 		</section>
 		<section id="footer">
 			<button class="start">Start</button>
+			<button class="randomize">Randomize</button>
 		</section>
+		<div class="dialog">
+			<div class="close-dialog">x</div>
+			<div class="dialog-text-section">
+  				<p class="dialog-text">Dialog text</p>
+			</div>
+		</div>
+
 		<!-- load javascript -->
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+		<script type="text/javascript" src="{{ url_for('static', filename='dialog.js') }}"></script>
 		<script type="text/javascript" src="{{ url_for('static', filename='new-game.js') }}"></script>
 	</body>
 </html>

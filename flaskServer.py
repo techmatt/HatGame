@@ -192,7 +192,8 @@ def startNewGame():
 
     try:
         #id = getParam(requestJSON, 'id')
-        playerIds = getParam(requestJSON, 'players', isList=True)
+        #playerIds = getParam(requestJSON, 'players', isList=True)
+        teams = getParam(requestJSON, 'teams', isList=True)
         phrasesPerPlayer = getParam(requestJSON, 'phrasesPerPlayer', isInt=True)
         secondsPerTurn = getParam(requestJSON, 'secondsPerTurn', isInt=True)
         videoURL = getParam(requestJSON, 'videoURL', isString=True)
@@ -200,11 +201,13 @@ def startNewGame():
         traceback.print_exc(file=sys.stdout)
         return ErrorResponse(err)
 
-    teams = [ [], [] ]
-    for playerIdx, playerId in enumerate(playerIds):
-        teams[playerIdx % 2].append(playerId)
+    #print('teams:', teams)
+    #teams = [ [], [] ]
+    #for playerIdx, playerId in enumerate(playerIds):
+    #    teams[playerIdx % 2].append(playerId)
 
-    print('new game:', id, 'players:', playerIds, 'teams:', teams)
+    #print('new game:', id, 'players:', playerIds, 'teams:', teams)
+    print('new game:', id, 'teams:', teams)
     newSession = GameSession(id, teams, phrasesPerPlayer, secondsPerTurn, videoURL)
     activeGames[id] = newSession
     return jsonify({'id' : id, 'gameURL' : '/games/' + id + '/'})
