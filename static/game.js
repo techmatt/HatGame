@@ -530,13 +530,15 @@ class HatGameApp extends React.Component {
     }
   }
 
+  totalPhraseCount() {
+    const playerCount = this.state.teams.map( t => t.length).reduce((a, b) => a + b);
+    return this.state.phrasesPerPlayer * playerCount
+  }
+  
   hatSizeMessage() {
-    if (this.state.hat && this.state.team) {
+    if (this.state.hat && this.state.teams) {
       const countInHat = this.state.hat.length;
-      const playerCount = this.state.team.map( t => t.length).reduce((a, b) => a + b)
-      console.log("playerCount %o", playerCount);
-      const hatCapacity = this.state.phrasesPerPlayer * playerCount;
-      return `Words in hat: ${countInHat} of ${hatCapacity}`;
+      return `Words in hat: ${countInHat} of ${this.totalPhraseCount()}`;
     } else {
       return undefined; // No hat, just create empty div
     }
