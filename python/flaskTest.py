@@ -6,8 +6,10 @@ import json
 
 session = requests.session()
 URLBase = 'http://127.0.0.1:5000/'
-randomPhrases = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', \
-                 'September', 'October', 'November', 'December']
+#randomPhrases = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', \
+#                 'September', 'October', 'November', 'December']
+randomPhrases = ['Ja', 'Fe', 'Ma', 'Ap', 'Ma', 'Ju', 'Jl', 'Au', \
+                 'Se', 'Oc', 'No', 'De']
 runInvalidTests = False
 
 def getRandomWordsFromServer():
@@ -27,10 +29,18 @@ def randomString():
 
 def makeRandomGame():
     allPlayers = ['matt', 'amanda', 'graham', 'peter', 'nik', 'jason', 'ronan', 'john', 'glenn', 'sarah']
-    playerCount = random.randint(2, 5) * 2
+    teamCount = random.randint(2, 5)
+    teams = []
+    for teamIdx in range(0, teamCount):
+        team = []
+        playerCount = random.randint(2, 5)
+        playerNames = random.sample(allPlayers, playerCount)
+        for playerIdx in range(0, playerCount):
+            team.append(playerNames[playerIdx] + str(teamIdx))
+        teams.append(team)
     gameDict = {
         'id': randomString(),
-        'players': allPlayers[0:playerCount],
+        'teams': teams,
         'phrasesPerPlayer': random.randint(2, 10),
         'secondsPerTurn': random.randint(10, 60),
         'videoURL': 'vid' + randomString() }
@@ -133,13 +143,15 @@ def printScores(gameID):
     gameState = processGetRequest(URLBase + 'api/gamestate/'+ gameID)
     teams = gameState['teams']
     players = [player for team in teams for player in team]
+    total = sum(gameState['scores'])
     scoreA = gameState['scores'][0]
     scoreB = gameState['scores'][1]
-    total = scoreA + scoreB
+    #total = scoreA + scoreB
     perPlayer = total // len(players)
+    perPlayerPerPhrase = perPlayer // gameState['phrasesPerPlayer']
     #assert(perPlayer == gameState['phrasesPerPlayer'])
-    print('team scores:', scoreA, scoreB, total, perPlayer)
-
+    print('team scores:', scoreA, scoreB, total, perPlayer, perPlayerPerPhrase)
+    
 def simulateValidPlayerTurn(gameID):
     gameState = processGetRequest(URLBase + 'api/gamestate/'+ gameID)
     gameURLBase = URLBase + 'games/' + gameID + '/'

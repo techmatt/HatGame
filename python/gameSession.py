@@ -91,6 +91,7 @@ class GameSession:
         self.activeTeamIdx = -1
         self.prevPhrasesPlayerName = ''
         self.prevPhrases = []
+        self.prevPhrase = None
         self.continuationTurnSeconds = 0.0
     
     def getStateDict(self):
@@ -106,13 +107,16 @@ class GameSession:
                 #allPlayersList.append(player.id)
             teamList.append(teamPlayerList)
             teamScores.append(team.score)
-            activePlayerIndexPerTeam.append(team.activePlayerIdx)
+            if self.mainPhase in [GameMainPhase.Write, GameMainPhase.Done]:
+                # In this case, don't display an active player
+                activePlayerIndexPerTeam.append(-1)
+            else:
+                activePlayerIndexPerTeam.append(team.activePlayerIdx)
 
         playerWritingStatus = {}
-        if self.mainPhase == GameMainPhase.Write:
-            for team in self.teams:
-                for player in team.players:
-                    playerWritingStatus[player.id] = (len(player.phrases) == self.phrasesPerPlayer)
+        for team in self.teams:
+            for player in team.players:
+                playerWritingStatus[player.id] = (len(player.phrases) == self.phrasesPerPlayer)
 
         secondsRemaining = -1.0
         #if self.turnStartTime is not None:
@@ -145,6 +149,7 @@ class GameSession:
         result['activePlayerIndexPerTeam'] = activePlayerIndexPerTeam
         result['prevPhrasesPlayerName'] = self.prevPhrasesPlayerName
         result['prevPhrases'] = self.prevPhrases
+        result['prevPhrase'] = self.prevPhrase
         return result
 
     def signalRefresh(self):
@@ -247,6 +252,9 @@ class GameSession:
 
         self.subPhase = GameSubPhase.ConfirmingPhrases
 
+    def recordPrevPhrase(self, prevPhrase):
+        self.prevPhrase = prevPhrase
+
     def confirmPhrases(self, playerID, acceptedPhrases):
         self.log(playerID + ' assigning phrases')
         self.log('accepted: ' + str(acceptedPhrases))
@@ -265,6 +273,7 @@ class GameSession:
             
         self.prevPhrasesPlayerName = activePlayer.id
         self.prevPhrases = copy.copy(acceptedPhrases)
+        self.prevPhrase = None # Don't carry-over prevPhrase to next turn
 
         shouldAdvancePlayer = True
         if len(self.phrasesInHat) == 0:

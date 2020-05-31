@@ -1,32 +1,56 @@
+'use strict';
 
 const e = React.createElement;
 
 const textIndicatingPlayerIsWriting = ' - writing'; // ✍️
 
-// Displays the list of players, with css to indicate the active player
+// Displays the list of players on each team, with css to indicate the active player
 // props:
-//   players - player list
-//   activePlayerIdx - active player to highlight, or -1 for no hilight
-//   playerHasCompletedPhrases - list of bools indicating player is done writing phrases
+//   teams - list of lists of player names
+//   activePlayerIndexPerTeam - active player per team to highlight, or -1 for no highlight
+//   playerWritingStatus - dict from player name to boolean, indicating the player is still writing
+//                       - if the dict is missing a player name, assume they're not writing
+//  activeTeamIndex - the index of the team currently playing
+// scores - optional list of scores for each team; if given will be shown
 function PlayerList(props) {
   console.log("Rendering PlayerList with props %o", props);
-  if(typeof props.players == 'undefined') {
+  if (typeof props.teams == 'undefined') {
     console.log("no player list to render yet");
-    return e('div', null, ''); // Special case when we haven't loaded player list
+    return e('div', null, ''); // Special case when we haven't loaded teams
   } else {
     return e(
       'table',
-      {className: 'player_list_table'},
+      { className: 'player_list_table' },
       e('tbody', null,
-        props.players.map( (player, i) => {
-          const playerStatus = (i == props.activePlayerIdx ? 'active' : 'passive');
+        props.teams.map((team, teamI) => {
+          const scoreElement = (props.scores ?
+            e('td',
+              { className: 'score_display' },
+              `score: ${props.scores[teamI]}`
+            )
+            : undefined
+          );
           return e(
-            'tr', 
-            {key: player}, 
-            e('td', 
-            {className: `${playerStatus}_player_in_list`},
-            player + (props.playerHasCompletedPhrases[i] ? '' : textIndicatingPlayerIsWriting)))
-          }
+            'tr',
+            { key: team },
+            team.map((player, playerI) => {
+              const playerOnDeck = (playerI == props.activePlayerIndexPerTeam[teamI]);
+              const teamIsActive = (teamI == props.activeTeamIndex)
+              const playerStatus = (playerOnDeck ?
+                (teamIsActive ? 'active' : 'on_deck') : 'passive')
+              const playerDoneWriting = props.playerWritingStatus[player]
+              const textForWriting = playerDoneWriting ? '' : textIndicatingPlayerIsWriting;
+              return e('td',
+                {
+                  key: player,
+                  className: `${playerStatus}_player_in_list`
+                },
+                player + textForWriting)
+            }
+            ),
+            scoreElement
+          )
+        }
         )
       )
     )
@@ -40,9 +64,7 @@ class PhraseListCreator extends React.Component {
   //   onPhraseListCreation - function to call once phrases are collected that takes phraseList
   constructor(props) {
     super(props);
-    console.log("creating a PhraseListCreator for %o phrases", props.phraseCount);
     this.textInputRefs = Array(props.phraseCount).fill(0).map(x => React.createRef());
-    console.log("text input refs %o",  this.textInputRefs);
   }
   
   handleSubmit(event) {
@@ -61,7 +83,7 @@ class PhraseListCreator extends React.Component {
       e(
         'div',
         { className: 'phrase_input_prompt' },
-        `Please enter ${this.props.phraseCount} phrases that most players will recognize.`
+        `Please enter ${this.props.phraseCount} words or short phrases that most players will recognize.`
       ),
       e(
 	      'form',
@@ -205,7 +227,7 @@ class WordListConfirmer extends React.Component {
               }
             ),
             e('label',
-              {for: "checkbox " + word},
+              {htmlFor: "checkbox " + word},
               word)
           )
       ),
@@ -275,6 +297,8 @@ class HatGameApp extends React.Component {
     this.setState((state, props) => ({
       wordsClicked: state.wordsClicked.concat([word]),
     }));
+    const endpoint = `/games/${this.props.gameId}/prevphrase/${word}`;
+    this.postData(endpoint, null);
   }
 
   endTurn() {
@@ -295,29 +319,39 @@ class HatGameApp extends React.Component {
     {acceptedPhrases: phrases});
   }
 
-  viewingPlayerIndex() {
-    return this.state.players.indexOf(this.props.player);
+  // returns the name of the active player
+  activePlayer() {
+    // activeTeam is a list of player names
+    const activeTeam = this.state.teams[this.state.activeTeamIndex];
+    const relevantIndex = this.state.activePlayerIndexPerTeam[this.state.activeTeamIndex];
+    return activeTeam[relevantIndex];
   }
 
   isItMyTurn() {
-    const viewingPlayerIndex = this.viewingPlayerIndex();
-    if (viewingPlayerIndex == -1) {
-      const message = (
-        `Game is in a weird state where viewing player ${this.props.player} ` + 
-        `is not in player list ${this.state.players}.  Please double check your url.`
-      );
-      alert(message);
-    };
-    console.log("Player list %o", this.state.players);
-    console.log("index of player %o is %o; current player index is %o",
-      this.state.players, viewingPlayerIndex, this.state.activePlayerIdx);
-    return viewingPlayerIndex == this.state.activePlayerIdx;
+    return this.props.player == this.activePlayer();
+  }
+
+  shouldDisplayScores() {
+    return this.state.mainPhase == 'GameMainPhase.Done';
+  }
+
+  mainPhaseText() {
+    switch (this.state.mainPhase) {
+      case "GameMainPhase.Write":
+        return 'Word Creation'
+      case "GameMainPhase.MultiWord":
+        return 'Round One: Many-Word Clues'
+      case "GameMainPhase.SingleWord":
+        return 'Round Two: Single-Word Clues'
+      case "GameMainPhase.Charade":
+        return 'Round Three: Charades'
+      case "GameMainPhase.Done":
+        return 'Game Complete'
+    }
   }
 
   renderInWritePhase() {
-    const viewingPlayerIsDoneWriting = this.state.playerHasCompletedPhrases[this.viewingPlayerIndex()];
-    console.log("Viewing player index %o, list %o",
-      this.viewingPlayerIndex(), this.state.playerHasCompletedPhrases);
+    const viewingPlayerIsDoneWriting = this.state.playerWritingStatus[this.props.player];
     
     if (viewingPlayerIsDoneWriting) {
       return e(
@@ -336,6 +370,16 @@ class HatGameApp extends React.Component {
     }
   }
 
+  messageAboutContinuationTurn() {
+    console.log('seconds: %o %o', this.state.secondsRemaining, this.state.secondsPerTurn);
+    if (this.state.secondsRemaining < this.state.secondsPerTurn) {
+      return `${this.activePlayer()} gets to continue their turn with ` + 
+      `${Math.round(this.state.secondsRemaining)} seconds remaining`
+    } else {
+      return undefined // empty element
+    }
+  }
+  
   renderPreviousRoundPhraseList() {
     if (this.state.prevPhrases && this.state.prevPhrases.length > 0)
       return e(
@@ -346,7 +390,8 @@ class HatGameApp extends React.Component {
           this.state.prevPhrases.map(phrase =>
             e('li', { key: phrase }, phrase)
           )
-        )
+        ),
+        this.messageAboutContinuationTurn()
       )
     else
       // no previous phrases, just return empty div, 
@@ -367,13 +412,12 @@ class HatGameApp extends React.Component {
         )
       )
     } else {
-      const activePlayer = this.state.players[this.state.activePlayerIdx];
       return e(
         'div', null,
         this.renderPreviousRoundPhraseList(),
         e(
           'div', { className: 'waiting_for_player_to_start_text' },
-          `Waiting for current player ${activePlayer} to start game`
+          `Waiting for current player ${this.activePlayer()} to start their turn`
         )
       )
     }
@@ -394,7 +438,7 @@ class HatGameApp extends React.Component {
         null,
         e(CountdownTimer,
           {
-            initialSeconds: this.state.secondsPerTurn,
+            initialSeconds: this.state.secondsRemaining,
             timerExpirationCallback: this.handleTimerExpiration.bind(this)
           }
         ),
@@ -406,12 +450,19 @@ class HatGameApp extends React.Component {
         )
       )
     } else {
-      return e(CountdownTimer,
-        {
-          initialSeconds: this.state.secondsRemaining,
-          timerExpirationCallback: this.handleTimerExpiration.bind(this)
-        }
-      )
+      return e('div', null,
+        e(CountdownTimer,
+          {
+            initialSeconds: this.state.secondsRemaining,
+            timerExpirationCallback: this.handleTimerExpiration.bind(this)
+          }
+        ),
+        this.state.prevPhrase ? e('div',
+         {className: 'previous_phrase'},
+         this.state.prevPhrase
+        )
+        : undefined // empty element if no previous phrase
+      );
     }
   }
 
@@ -425,12 +476,10 @@ class HatGameApp extends React.Component {
         }
       )
     } else {
-      const activePlayer = this.state.players[this.state.activePlayerIdx];
       return e(
         'div', null,
-        `Waiting for current player ${activePlayer} to confirm words`
+        `Waiting for current player ${this.activePlayer()} to confirm words`
       )
-      // TODO Enter state of waiting for server
     }
   }
 
@@ -471,7 +520,7 @@ class HatGameApp extends React.Component {
         return e(
           'div',
           { className: "game_done_text" },
-          `Game complete, thanks for playing! Scores: ${this.state.scores}`
+          'Thanks for playing!'
         );
       default:
         return e(
@@ -481,11 +530,15 @@ class HatGameApp extends React.Component {
     }
   }
 
+  totalPhraseCount() {
+    const playerCount = this.state.teams.map( t => t.length).reduce((a, b) => a + b);
+    return this.state.phrasesPerPlayer * playerCount
+  }
+  
   hatSizeMessage() {
-    if (this.state.hat && this.state.players) {
+    if (this.state.hat && this.state.teams) {
       const countInHat = this.state.hat.length;
-      const hatCapacity = this.state.phrasesPerPlayer * this.state.players.length;
-      return `Words in hat: ${countInHat} of ${hatCapacity}`;
+      return `Words in hat: ${countInHat} of ${this.totalPhraseCount()}`;
     } else {
       return undefined; // No hat, just create empty div
     }
@@ -497,7 +550,7 @@ class HatGameApp extends React.Component {
       null,
       e('div',
         {className: 'main_phase_text'},
-        this.state.mainPhase
+        this.mainPhaseText()
       ),
       e('div',
         {className: 'hat_size_text'},
@@ -505,9 +558,11 @@ class HatGameApp extends React.Component {
       ),
       e(PlayerList,
         {
-          players: this.state.players,
-          activePlayerIdx: this.state.activePlayerIdx,
-          playerHasCompletedPhrases: this.state.playerHasCompletedPhrases,
+          teams: this.state.teams,
+          activePlayerIndexPerTeam: this.state.activePlayerIndexPerTeam,
+          playerWritingStatus: this.state.playerWritingStatus,
+          activeTeamIndex: this.state.activeTeamIndex,
+          scores: this.shouldDisplayScores() ? this.state.scores : undefined,
         }
       ),
       this.renderPhaseSpecificUI()
