@@ -58,7 +58,7 @@ class GameSession:
         if teamCount < 2 or teamCount > 30:
             raise GameError('must have between 2 and 30 teams: ' + teams)
 
-        self.players = []
+        #self.players = []
         self.playersByID = {}
         self.teams = []
         for teamIdx, teamPlayerList in enumerate(teamPlayerLists):
@@ -72,7 +72,7 @@ class GameSession:
 
                 player = Player(playerID)
                 teamPlayers.append(player)
-                self.players.append(player)
+                #self.players.append(player)
                 self.playersByID[playerID] = player
 
             random.shuffle(teamPlayers)
@@ -154,7 +154,7 @@ class GameSession:
 
     def signalRefresh(self):
         print('signalling refresh')
-        for player in self.players:
+        for player in self.playersByID.values():
             player.refreshEvent.set()
 
     def log(self, text):
@@ -216,7 +216,8 @@ class GameSession:
         if self.allPhrasesAdded():
             self.log('all phrases completed, starting multiword round')
             self.newMainPhase(GameMainPhase.MultiWord)
-            self.activeTeamIdx = random.randint(0, len(self.teams) - 1)
+            #self.activeTeamIdx = random.randint(0, len(self.teams) - 1)
+            self.activeTeamIdx = 0
 
     def allPhrasesAdded(self):
         for id, player in self.playersByID.items():
@@ -296,6 +297,42 @@ class GameSession:
             self.continuationTurnSeconds = self.leftoverTurnTime
         self.subPhase = GameSubPhase.WaitForStart
 
+    def addPlayerToTeam(self, teamIndex, newPlayerName):
+        if teamIndex < 0 or teamIndex >= len(self.teams):
+            raise GameError('teamIndex out of bounds: ' + str(teamIndex))
+        if len(newPlayerName) == 0:
+            raise GameError('player names cannot be empty')
+        if newPlayerName in self.playersByID:
+            raise GameError('player name already exists')
+
+        print('adding player to team:', teamIndex, newPlayerName)
+
+        newPlayerTeam = self.teams[teamIndex]
+        newPlayer = Player(newPlayerName)
+        self.playersByID[newPlayerName] = newPlayer
+        newPlayerTeam.players.append(newPlayer)
+        
+        # rebuild the player list by reiterating through the teams
+        """self.players = []
+        for team in self.teams:
+            for player in team.players:
+                self.players.append(player)"""
+
+    def removePlayer(self, playerName):
+        print('removing player:', playerName)
+
+        if playerName not in self.playersByID:
+            raise GameError('player name not found in player list')
+
+        for team in self.teams:
+            filteredPlayers = list(filter(lambda player: player.id == playerName, team.players))
+            if len(filteredPlayers) == 1:
+                playerIdx = team.players.index(filteredPlayers[0])
+                del team.players[playerIdx]
+                return 'player removed'
+
+        raise GameError('player name not found in teams')
+        
 if __name__ == "__main__":
     print('hi!')
     # run a test game

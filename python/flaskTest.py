@@ -96,6 +96,31 @@ def testGameCreation():
     print('game creation test passed')
     return gameIDs
 
+def testAddRemovePlayers():
+    # create a game with a random ID and verify it is on the server
+    gameDict = makeRandomGame()
+    gameID = gameDict['id']
+    processPostRequest(URLBase + 'api/newgame', json=gameDict)
+    gameState = processGetRequest(URLBase + 'api/gamestate/'+ gameID)
+    gameURLBase = URLBase + 'games/' + gameID + '/'
+    teams = gameState['teams']
+    players = [player for team in teams for player in team]
+
+    for teamIdx in range(0, len(teams)):
+        newPlayerName = 'newPlayerOnTeam' + str(teamIdx)
+        processPostRequest(gameURLBase + players[0] + '/addplayertoteam',
+            json={'teamIndex' : teamIdx, 'newPlayerName' : newPlayerName})
+        testGameState = processGetRequest(URLBase + 'api/gamestate/'+ gameID)
+        assert(newPlayerName in testGameState['teams'][teamIdx])
+        #print('team:', )
+        
+    for teamIdx in range(0, len(teams)):
+        newPlayerName = 'newPlayerOnTeam' + str(teamIdx)
+        processPostRequest(gameURLBase + players[0] + '/removeplayer',
+            json={'playerName' : newPlayerName})
+    
+    print('add remove player test passed')
+
 def testInvalidCalls(validGameID):
     # make API calls to an non-existant game
     processPostRequest(URLBase + 'games/badGameID/badPlayerID/recordphrases', json=None)
@@ -205,8 +230,10 @@ def simulateInvalidPlayerTurn(gameID):
 
     verifyPhase(newGameID, None, 'GameSubPhase.WaitForStart')
 
-print(getRandomWordsFromServer())
-print(getRandomWordsFromServer())
+#print(getRandomWordsFromServer())
+#print(getRandomWordsFromServer())
+
+testAddRemovePlayers()
 
 newGameList = testGameCreation()
 newGameID = newGameList[0]

@@ -230,13 +230,66 @@ def recordPhrases(gameId, playerId):
         return ErrorResponse(err)
 
     try:
-        print("Got phrases from player {}: {}".format(playerId, phrases))
+        #print("Got phrases from player {}: {}".format(playerId, phrases))
         game.recordPlayerPhrases(playerId, phrases)
     except GameError as err:
         traceback.print_exc()
         return ErrorResponse(err)
     game.signalRefresh()
     return 'phrases recorded'
+
+
+@app.route('/games/<gameId>/<playerId>/addplayertoteam', methods=['POST'])
+def addPlayerToTeam(gameId, playerId):
+    # params:
+    #  teamIndex: Index of the team to insert the new player.
+    #  newPlayerName: Name of the new player to add.
+    
+    try:
+        game = activeGames[gameId]
+    except KeyError as err:
+        traceback.print_exc()
+        return ErrorResponse(err)
+
+    requestJSON = request.get_json()
+    try:
+        teamIndex = getParam(requestJSON, 'teamIndex', isInt=True)
+        newPlayerName = getParam(requestJSON, 'newPlayerName')
+    except ParamError as err:
+        return ErrorResponse(err)
+
+    try:
+        game.addPlayerToTeam(teamIndex, newPlayerName)
+    except GameError as err:
+        traceback.print_exc()
+        return ErrorResponse(err)
+    game.signalRefresh()
+    return 'new player added'
+
+@app.route('/games/<gameId>/<playerId>/removeplayer', methods=['POST'])
+def removePlayer(gameId, playerId):
+    # params:
+    #  playerName: Name of the player to remove.
+    
+    try:
+        game = activeGames[gameId]
+    except KeyError as err:
+        traceback.print_exc()
+        return ErrorResponse(err)
+
+    requestJSON = request.get_json()
+    try:
+        playerName = getParam(requestJSON, 'playerName')
+    except ParamError as err:
+        return ErrorResponse(err)
+
+    try:
+        game.removePlayer(playerName)
+    except GameError as err:
+        traceback.print_exc()
+        return ErrorResponse(err)
+    game.signalRefresh()
+    return 'player removed'
 
 @app.route('/games/<gameId>/<playerId>/startturn', methods=['POST'])
 def startTurn(gameId, playerId):
@@ -278,7 +331,6 @@ def endTurn(gameId, playerId):
 
 @app.route('/games/<gameId>/prevphrase/<prevPhrase>', methods=['POST'])
 def prevPhrase(gameId, prevPhrase):
-    print(f"Server got phrase '{prevPhrase}'")
     try:
         game = activeGames[gameId]
         game.recordPrevPhrase(prevPhrase)
