@@ -12,6 +12,8 @@ const textIndicatingPlayerIsWriting = ' - writing'; // ✍️
 //                       - if the dict is missing a player name, assume they're not writing
 //  activeTeamIndex - the index of the team currently playing
 // scores - optional list of scores for each team; if given will be shown
+// showHostControls - boolean indicating we should show host controls
+// handleAddPlayer - function that takes team index, to be called when adding a player to that team
 function PlayerList(props) {
   console.log("Rendering PlayerList with props %o", props);
   if (typeof props.teams == 'undefined') {
@@ -27,6 +29,16 @@ function PlayerList(props) {
             e('td',
               { className: 'score_display' },
               `score: ${props.scores[teamI]}`
+            )
+            : undefined
+          );
+          const addPlayerElement = (props.showHostControls ?
+            e('td',
+              { className: 'add_player' },
+              e('a',
+                { onClick: () => props.handleAddPlayer(teamI) },
+                '+'
+              )
             )
             : undefined
           );
@@ -48,7 +60,8 @@ function PlayerList(props) {
                 player + textForWriting)
             }
             ),
-            scoreElement
+            scoreElement,
+            addPlayerElement
           )
         }
         )
@@ -248,6 +261,8 @@ class HatGameApp extends React.Component {
     this.state = {
       mainPhase: 'Loading',
       wordsClicked: [], // Not from server, tracked on client
+      showScores: false,
+      showHostControls: false,
     }
     console.log("Constructing HatGameApp with props %o", props)
   }
@@ -319,6 +334,10 @@ class HatGameApp extends React.Component {
     {acceptedPhrases: phrases});
   }
 
+  handleAddPlayer(teamIndex) {
+    alert("Adding a player to team " + teamIndex);
+  }
+
   // returns the name of the active player
   activePlayer() {
     // activeTeam is a list of player names
@@ -332,7 +351,7 @@ class HatGameApp extends React.Component {
   }
 
   shouldDisplayScores() {
-    return this.state.mainPhase == 'GameMainPhase.Done';
+    return this.state.mainPhase == 'GameMainPhase.Done' || this.state.showScores;
   }
 
   mainPhaseText() {
@@ -534,7 +553,7 @@ class HatGameApp extends React.Component {
     const playerCount = this.state.teams.map( t => t.length).reduce((a, b) => a + b);
     return this.state.phrasesPerPlayer * playerCount
   }
-  
+
   hatSizeMessage() {
     if (this.state.hat && this.state.teams) {
       const countInHat = this.state.hat.length;
@@ -563,6 +582,8 @@ class HatGameApp extends React.Component {
           playerWritingStatus: this.state.playerWritingStatus,
           activeTeamIndex: this.state.activeTeamIndex,
           scores: this.shouldDisplayScores() ? this.state.scores : undefined,
+          showHostControls: this.state.showHostControls,
+          handleAddPlayer: this.handleAddPlayer.bind(this),
         }
       ),
       this.renderPhaseSpecificUI()
@@ -593,10 +614,21 @@ class HatGameApp extends React.Component {
 
 const appElement = document.querySelector("#app");
 
-ReactDOM.render(e(
+const appComponent = ReactDOM.render(e(
   HatGameApp, 
   {player: appElement.getAttribute("data-player-id"),
   gameId: appElement.getAttribute("data-game-id")}
   ), 
   appElement);
 
+  // Connect control checkboxes to the app component
+  const scoreCheckbox = document.getElementById("show_score_checkbox")
+  scoreCheckbox.onchange = () => {
+    appComponent.setState({showScores: scoreCheckbox.checked})
+  };
+
+  const hostControlCheckbox = document.getElementById("host_controls_checkbox")
+  hostControlCheckbox.onchange = () => {
+    appComponent.setState({showHostControls: hostControlCheckbox.checked})
+  };
+  

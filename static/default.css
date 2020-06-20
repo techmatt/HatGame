@@ -53,6 +53,9 @@ img#logo {
 	align-self: center;
 }
 
+.controls-div {
+	color: white;
+}
 #playerList {
     display: flex;
 	flex-wrap: wrap;
@@ -107,7 +110,7 @@ img#logo {
 .input-section:last-child {
 	margin-bottom: .3em;
 }
-input {
+input[type=text] {
 	width: 100%;
 	margin-right: 5px;
 	min-height: 2.5em;

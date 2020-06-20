@@ -10,6 +10,18 @@
 		<a target="_blank" href="{{ video_url }}"><button>Open Video</button></a>
 	{% endif %}
 	</div>
+	{% if show_controls %}
+	<div class=controls-div>
+		<div>
+			<input type="checkbox" id="show_score_checkbox">
+			<label for="show_score_checkbox"> Show Score</label>
+		</div>
+		<div>
+			<input type="checkbox" id="host_controls_checkbox">
+			<label for="host_controls_checkbox"> Host Controls</label>
+		</div>
+	</div>
+	{% endif %}
 	<div id="playerList">
 	{% for item in playerlist %}
 		<div class="player-icon {{ loop.cycle('team-1', 'team-2') }}">

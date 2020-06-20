@@ -4,7 +4,9 @@
 		{% include 'head.html' %} 
 	{% endwith %}
   <body>
+	{% with show_controls=True %}
 	{% include 'header.html' %}
+	{% endwith %}
 	<section id="main">
 		<div class="flex-window" id="app" data-game-id="{{gameId}}" data-player-id="{{playerId}}">
 		</div>
