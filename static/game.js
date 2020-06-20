@@ -335,7 +335,13 @@ class HatGameApp extends React.Component {
   }
 
   handleAddPlayer(teamIndex) {
-    alert("Adding a player to team " + teamIndex);
+    const newPlayerName = prompt("New player name");
+    console.log(`Adding player ${newPlayerName} to team index ${teamIndex}`)
+    this.postData(
+      `/games/${this.props.gameId}/${this.props.player}/addplayertoteam`,
+      {teamIndex: teamIndex,
+        newPlayerName: newPlayerName}
+      )
   }
 
   // returns the name of the active player
