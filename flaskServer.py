@@ -12,6 +12,9 @@ from markupsafe import escape
 from python.gameSession import GameSession, GameError
 
 app = Flask(__name__)
+app.config.update(
+    TEMPLATES_AUTO_RELOAD = True
+)
 
 class ParamError(Exception):
     pass
