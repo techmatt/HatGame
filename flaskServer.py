@@ -100,11 +100,12 @@ def gamePortal(gameId):
         return ErrorResponse(err)
 
     playerList = []
-    for player in game.players:
-        d = {}
-        d['href'] = player.id + '/'
-        d['caption'] = player.id
-        playerList.append(d)
+    for team in game.teams:
+        for player in team.players:
+            d = {}
+            d['href'] = player.id + '/'
+            d['caption'] = player.id
+            playerList.append(d)
     return render_template("game-portal.html", \
                            game_name=gameId, playerlist=playerList, video_url=game.videoURL)
 
