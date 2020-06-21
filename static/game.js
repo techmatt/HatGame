@@ -14,6 +14,7 @@ const textIndicatingPlayerIsWriting = ' - writing'; // ✍️
 // scores - optional list of scores for each team; if given will be shown
 // showHostControls - boolean indicating we should show host controls
 // handleAddPlayer - function that takes team index, to be called when adding a player to that team
+// handleRemovePlayer - function that takes playerName, to be called when removing a player
 function PlayerList(props) {
   console.log("Rendering PlayerList with props %o", props);
   if (typeof props.teams == 'undefined') {
@@ -36,7 +37,10 @@ function PlayerList(props) {
             e('td',
               { className: 'add_player' },
               e('a',
-                { onClick: () => props.handleAddPlayer(teamI) },
+                { onClick: () => props.handleAddPlayer(teamI),
+                  role:"button",
+                  title:"Add player to this team"
+                },
                 '+'
               )
             )
@@ -52,12 +56,25 @@ function PlayerList(props) {
                 (teamIsActive ? 'active' : 'on_deck') : 'passive')
               const playerDoneWriting = props.playerWritingStatus[player]
               const textForWriting = playerDoneWriting ? '' : textIndicatingPlayerIsWriting;
+              const removalElement = (props.showHostControls ?
+                e('a',
+                  {
+                    onClick: () => props.handleRemovePlayer(player),
+                    title:`Remove ${player} from game`,
+                  },
+                  '❌'
+                )
+                : undefined
+                );
               return e('td',
                 {
                   key: player,
                   className: `${playerStatus}_player_in_list`
                 },
-                player + textForWriting)
+                e('div', {}, 
+                  player + textForWriting,
+                  removalElement)
+              );
             }
             ),
             scoreElement,
@@ -344,6 +361,14 @@ class HatGameApp extends React.Component {
       )
   }
 
+  handleRemovePlayer(player) {
+    console.log(`Removing player ${player}`)
+    this.postData(
+      `/games/${this.props.gameId}/${this.props.player}/removeplayer`,
+      {playerName: player}
+      )
+  }
+
   // returns the name of the active player
   activePlayer() {
     // activeTeam is a list of player names
@@ -590,6 +615,7 @@ class HatGameApp extends React.Component {
           scores: this.shouldDisplayScores() ? this.state.scores : undefined,
           showHostControls: this.state.showHostControls,
           handleAddPlayer: this.handleAddPlayer.bind(this),
+          handleRemovePlayer: this.handleRemovePlayer.bind(this),
         }
       ),
       this.renderPhaseSpecificUI()
