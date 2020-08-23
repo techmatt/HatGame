@@ -264,7 +264,8 @@ class GameSession:
 
         activePlayer = self.assertActivePlayer(playerID)
         self.assertMainPhase([GameMainPhase.MultiWord, GameMainPhase.SingleWord, GameMainPhase.Charade])
-        self.assertSubPhase(GameSubPhase.ConfirmingPhrases)
+        # The subphase is typically GameSubPhase.ConfirmingPhrases, but to enable the host 
+        # control that skips a player, the subPhase can be anything
         
         activeTeam = self.teams[self.activeTeamIdx]
         for phrase in acceptedPhrases:
