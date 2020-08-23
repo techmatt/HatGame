@@ -89,9 +89,10 @@ class GameSession:
         self.phrasesInHat = None
         self.turnStartTime = None
         self.activeTeamIdx = -1
-        self.prevPhrasesPlayerName = ''
-        self.prevPhrases = []
-        self.prevPhrase = None
+        #self.previousRoundPhrasesPlayerName = ''
+        self.previousRoundPhrases = []
+        self.clickedPhrases = []
+        self.broadcastPhrase = None
         self.continuationTurnSeconds = 0.0
     
     def getStateDict(self):
@@ -137,7 +138,6 @@ class GameSession:
         result['secondsPerTurn'] = self.secondsPerTurn
         result['videoURL'] = str(self.videoURL)
 
-        #result['players'] = allPlayersList
         result['teams'] = teamList
         result['playerWritingStatus'] = playerWritingStatus
         result['scores'] = teamScores
@@ -147,9 +147,10 @@ class GameSession:
         result['subPhase'] = str(self.subPhase)
         result['activeTeamIndex'] = self.activeTeamIdx
         result['activePlayerIndexPerTeam'] = activePlayerIndexPerTeam
-        result['prevPhrasesPlayerName'] = self.prevPhrasesPlayerName
-        result['prevPhrases'] = self.prevPhrases
-        result['prevPhrase'] = self.prevPhrase
+        #result['previousRoundPhrasesPlayerName'] = self.previousRoundPhrasesPlayerName
+        result['previousRoundPhrases'] = self.previousRoundPhrases
+        result['wordsClicked'] = self.clickedPhrases
+        result['prevPhrase'] = self.broadcastPhrase
         return result
 
     def signalRefresh(self):
@@ -250,11 +251,13 @@ class GameSession:
         self.leftoverTurnTime = self.secondsPerTurn - turnTimeTaken
         self.continuationTurnSeconds = 0.0
         self.turnStartTime = None
+        self.clickedPhrases = []
 
         self.subPhase = GameSubPhase.ConfirmingPhrases
 
     def recordPrevPhrase(self, prevPhrase):
         self.prevPhrase = prevPhrase
+        self.clickedPhrases.append(prevPhrase)
 
     def confirmPhrases(self, playerID, acceptedPhrases):
         self.log(playerID + ' assigning phrases')
@@ -272,8 +275,8 @@ class GameSession:
             else:
                 raise GameError('phrase not in hat: ' + phrase)
             
-        self.prevPhrasesPlayerName = activePlayer.id
-        self.prevPhrases = copy.copy(acceptedPhrases)
+        #self.previousRoundPhrasesPlayerName = activePlayer.id
+        self.previousRoundPhrases = copy.copy(acceptedPhrases)
         self.prevPhrase = None # Don't carry-over prevPhrase to next turn
 
         shouldAdvancePlayer = True
