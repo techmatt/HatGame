@@ -192,7 +192,7 @@ class CountdownTimer extends React.Component {
   }
 
   decrementSecondsRemaining() {
-    if (this.state.secondsRemaining <= 1.0 && this.state.secondsRemaining > 0.0) {
+    if (this.state.secondsRemaining < 1.0) {
       this.props.timerExpirationCallback();
     } else {
       this.setState((state, props) => ({
