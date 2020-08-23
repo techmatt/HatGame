@@ -161,6 +161,9 @@ button[type=submit] {
 
   margin-top:.3em;
 }
+.host_control_button {
+    all: initial; /* todo: improve this */
+}
 .phrase_text_input {
   margin-bottom: .3em;
   flex-basis: 100%;
