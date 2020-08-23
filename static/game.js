@@ -425,13 +425,13 @@ class HatGameApp extends React.Component {
   }
   
   renderPreviousRoundPhraseList() {
-    if (this.state.prevPhrases && this.state.prevPhrases.length > 0)
+    if (this.state.previousRoundPhrases && this.state.previousRoundPhrases.length > 0)
       return e(
         'div', { className: 'previous_turn_phrase_div' },
         'Phrases gotten in previous turn:',
         e('ul',
           null,
-          this.state.prevPhrases.map(phrase =>
+          this.state.previousRoundPhrases.map(phrase =>
             e('li', { key: phrase }, phrase)
           )
         ),
