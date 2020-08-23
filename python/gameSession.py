@@ -149,7 +149,7 @@ class GameSession:
         result['activePlayerIndexPerTeam'] = activePlayerIndexPerTeam
         #result['previousRoundPhrasesPlayerName'] = self.previousRoundPhrasesPlayerName
         result['previousRoundPhrases'] = self.previousRoundPhrases
-        result['wordsClicked'] = self.clickedPhrases
+        result['clickedPhrases'] = self.clickedPhrases
         result['prevPhrase'] = self.broadcastPhrase
         return result
 

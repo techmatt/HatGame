@@ -276,8 +276,9 @@ class HatGameApp extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      // This is an initial state until we load a state dict from the server
       mainPhase: 'Loading',
-      wordsClicked: [], // Not from server, tracked on client
+      clickedPhrases: [],
       showScores: false,
       showHostControls: false,
     }
@@ -294,7 +295,7 @@ class HatGameApp extends React.Component {
 			.then(response => response.json())
 			.then(data => {
         console.log("got state from server %o", data);
-        // Merge this.state with the server state, to preserve any local-only state
+        // Merge this.state with the server state, to preserve any potential local-only state
 				this.setState((state, props) => ({...this.state, ...data}));
 			});
   }
@@ -318,17 +319,10 @@ class HatGameApp extends React.Component {
     handleTurnStart() {
     const endpoint = `/games/${this.props.gameId}/${this.props.player}/startturn`;
     this.postData(endpoint, null);
-    // wordsClicked is tracked locally; initially its empty
-    this.setState({
-      wordsClicked: []
-    });
     this.getStateFromServer();
   }
   
   onWordClicked(word) {
-    this.setState((state, props) => ({
-      wordsClicked: state.wordsClicked.concat([word]),
-    }));
     const endpoint = `/games/${this.props.gameId}/prevphrase/${word}`;
     this.postData(endpoint, null);
   }
@@ -474,12 +468,12 @@ class HatGameApp extends React.Component {
   }
 
   unclickedHatWords() {
-    return this.state.hat.filter(w => !this.state.wordsClicked.includes(w));
+    return this.state.hat.filter(w => !this.state.clickedPhrases.includes(w));
   }
 
   renderWhenStarted() {
     if (this.isItMyTurn()) {
-      if (this.state.wordsClicked.length == this.state.hat.length) {
+      if (this.state.clickedPhrases.length == this.state.hat.length) {
         this.endTurn();
       }
       const wordsToRender = this.unclickedHatWords().slice(0, 2);
@@ -520,7 +514,7 @@ class HatGameApp extends React.Component {
     if (this.isItMyTurn()) {
       return e(WordListConfirmer,
         {
-          wordsDefaultingToChecked: this.state.wordsClicked,
+          wordsDefaultingToChecked: this.state.clickedPhrases,
           wordsDefaultingToUnchecked: this.unclickedHatWords().slice(0, 2),
           callbackAfterConfirmation: this.handlePhraseConfirmation.bind(this),
         }
