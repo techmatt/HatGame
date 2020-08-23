@@ -251,7 +251,6 @@ class GameSession:
         self.leftoverTurnTime = self.secondsPerTurn - turnTimeTaken
         self.continuationTurnSeconds = 0.0
         self.turnStartTime = None
-        self.clickedPhrases = []
 
         self.subPhase = GameSubPhase.ConfirmingPhrases
 
@@ -278,6 +277,8 @@ class GameSession:
         #self.previousRoundPhrasesPlayerName = activePlayer.id
         self.previousRoundPhrases = copy.copy(acceptedPhrases)
         self.prevPhrase = None # Don't carry-over prevPhrase to next turn
+        self.clickedPhrases = []
+
 
         shouldAdvancePlayer = True
         if len(self.phrasesInHat) == 0:
