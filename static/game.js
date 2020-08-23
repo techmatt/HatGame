@@ -9,12 +9,13 @@ const textIndicatingPlayerIsWriting = ' - writing'; // ✍️
 //   teams - list of lists of player names
 //   activePlayerIndexPerTeam - active player per team to highlight, or -1 for no highlight
 //   playerWritingStatus - dict from player name to boolean, indicating the player is still writing
-//                       - if the dict is missing a player name, assume they're not writing
+//                       - if the dict is null, don't show writing status
 //  activeTeamIndex - the index of the team currently playing
 // scores - optional list of scores for each team; if given will be shown
 // showHostControls - boolean indicating we should show host controls
 // handleAddPlayer - function that takes team index, to be called when adding a player to that team
 // handleRemovePlayer - function that takes playerName, to be called when removing a player
+// handleSkipPlayer - function that takes name of current player, to be called if the host wants to skip that player
 function PlayerList(props) {
   console.log("Rendering PlayerList with props %o", props);
   if (typeof props.teams == 'undefined') {
@@ -36,12 +37,13 @@ function PlayerList(props) {
           const addPlayerElement = (props.showHostControls ?
             e('td',
               { className: 'add_player' },
-              e('a',
+              e('button',
                 { onClick: () => props.handleAddPlayer(teamI),
-                  role:"button",
+                  type: "button",
+                  className: "host_control_button",
                   title:"Add player to this team"
                 },
-                '+'
+                'add player'
               )
             )
             : undefined
@@ -54,18 +56,32 @@ function PlayerList(props) {
               const teamIsActive = (teamI == props.activeTeamIndex)
               const playerStatus = (playerOnDeck ?
                 (teamIsActive ? 'active' : 'on_deck') : 'passive')
-              const playerDoneWriting = props.playerWritingStatus[player]
-              const textForWriting = playerDoneWriting ? '' : textIndicatingPlayerIsWriting;
+              const playerStillWriting = props.playerWritingStatus && props.playerWritingStatus[player]
+              const textForWriting = playerStillWriting ? textIndicatingPlayerIsWriting : '';
               const removalElement = (props.showHostControls ?
-                e('a',
+                e('button',
                   {
                     onClick: () => props.handleRemovePlayer(player),
                     title:`Remove ${player} from game`,
+                    type: "button",
+                    className: "host_control_button",
                   },
-                  '❌'
+                  'remove' // '❌'
                 )
                 : undefined
                 );
+              const skipElement = (props.showHostControls && playerStatus == 'active' ?
+                  e('button',
+                    {
+                      onClick: () => props.handleSkipPlayer(player),
+                      title:`Skip ${player}'s turn'`,
+                      type: "button",
+                      className: "host_control_button",
+                    },
+                    'skip'
+                  )
+                  : undefined
+                  );
               return e('td',
                 {
                   key: player,
@@ -73,6 +89,7 @@ function PlayerList(props) {
                 },
                 e('div', {}, 
                   player + textForWriting,
+                  skipElement,
                   removalElement)
               );
             }
@@ -312,13 +329,11 @@ class HatGameApp extends React.Component {
       this.postData(
         `/games/${this.props.gameId}/${this.props.player}/recordphrases`,
       {phrases: phrases});
-      this.getStateFromServer();
     }
   
     handleTurnStart() {
     const endpoint = `/games/${this.props.gameId}/${this.props.player}/startturn`;
     this.postData(endpoint, null);
-    this.getStateFromServer();
   }
   
   onWordClicked(word) {
@@ -329,7 +344,6 @@ class HatGameApp extends React.Component {
   endTurn() {
     const endpoint = `/games/${this.props.gameId}/${this.props.player}/endturn`;
     this.postData(endpoint, null);
-    this.getStateFromServer();
   }
 
   handleTimerExpiration() {
@@ -355,11 +369,18 @@ class HatGameApp extends React.Component {
   }
 
   handleRemovePlayer(player) {
-    console.log(`Removing player ${player}`)
+    console.log(`Removing player ${player}`);
     this.postData(
       `/games/${this.props.gameId}/${this.props.player}/removeplayer`,
       {playerName: player}
       )
+  }
+
+  handleSkipPlayer(currentPlayer) {
+    console.log(`Skipping current player ${currentPlayer}`);
+    this.postData(
+      `/games/${this.props.gameId}/${currentPlayer}/confirmphrases`,
+    {acceptedPhrases: []});
   }
 
   // returns the name of the active player
@@ -603,12 +624,13 @@ class HatGameApp extends React.Component {
         {
           teams: this.state.teams,
           activePlayerIndexPerTeam: this.state.activePlayerIndexPerTeam,
-          playerWritingStatus: this.state.playerWritingStatus,
+          playerWritingStatus: this.state.mainPhase == "GameMainPhase.Write" ? this.state.playerWritingStatus : null,
           activeTeamIndex: this.state.activeTeamIndex,
           scores: this.shouldDisplayScores() ? this.state.scores : undefined,
           showHostControls: this.state.showHostControls,
           handleAddPlayer: this.handleAddPlayer.bind(this),
           handleRemovePlayer: this.handleRemovePlayer.bind(this),
+          handleSkipPlayer: this.handleSkipPlayer.bind(this),
         }
       ),
       this.renderPhaseSpecificUI()
@@ -623,7 +645,7 @@ class HatGameApp extends React.Component {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: (data ? JSON.stringify(data) : null)
+        body: JSON.stringify(data)
       });
     } else {
       responsePromise = fetch("../../.." + endpoint, {
@@ -632,8 +654,8 @@ class HatGameApp extends React.Component {
     }
     //return responsePromise.then(r => r.json()); // parses JSON response into native JavaScript objects
     responsePromise.then(r => r.text())
-      .then(message => console.log(`server response: ${message}`));
-    this.getStateFromServer();
+      .then(message => console.log(`server response: ${message}`))
+      .then(x => this.getStateFromServer()); // once server recieves our post message, update our state based on the response
   }
 }
 
