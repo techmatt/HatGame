@@ -278,9 +278,8 @@ class HatGameApp extends React.Component {
     this.state = {
       // This is an initial state until we load a state dict from the server
       mainPhase: 'Loading',
-      clickedPhrases: [],
-      showScores: false,
-      showHostControls: false,
+      showScores: false, // tracked on client
+      showHostControls: false, // tracked on client
     }
     console.log("Constructing HatGameApp with props %o", props)
   }
@@ -295,7 +294,7 @@ class HatGameApp extends React.Component {
 			.then(response => response.json())
 			.then(data => {
         console.log("got state from server %o", data);
-        // Merge this.state with the server state, to preserve any potential local-only state
+        // Merge this.state with the server state, to preserve the local-only state
 				this.setState((state, props) => ({...this.state, ...data}));
 			});
   }
