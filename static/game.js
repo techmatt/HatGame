@@ -8,7 +8,7 @@ const textIndicatingPlayerIsWriting = ' - writing'; // ✍️
 // props:
 //   teams - list of lists of player names
 //   activePlayerIndexPerTeam - active player per team to highlight, or -1 for no highlight
-//   playerWritingStatus - dict from player name to boolean, indicating the player is still writing
+//   playerWritingStatus - dict from player name to boolean, indicating the player is done writing
 //                       - if the dict is null, don't show writing status
 //  activeTeamIndex - the index of the team currently playing
 // scores - optional list of scores for each team; if given will be shown
@@ -56,7 +56,7 @@ function PlayerList(props) {
               const teamIsActive = (teamI == props.activeTeamIndex)
               const playerStatus = (playerOnDeck ?
                 (teamIsActive ? 'active' : 'on_deck') : 'passive')
-              const playerStillWriting = props.playerWritingStatus && props.playerWritingStatus[player]
+              const playerStillWriting = props.playerWritingStatus && !props.playerWritingStatus[player]
               const textForWriting = playerStillWriting ? textIndicatingPlayerIsWriting : '';
               const removalElement = (props.showHostControls ?
                 e('button',
