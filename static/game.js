@@ -493,9 +493,6 @@ class HatGameApp extends React.Component {
 
   renderWhenStarted() {
     if (this.isItMyTurn()) {
-      if (this.state.clickedPhrases.length == this.state.hat.length) {
-        this.endTurn();
-      }
       const wordsToRender = this.unclickedHatWords().slice(0, 2);
       return e(
         'div',

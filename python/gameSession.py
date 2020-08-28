@@ -162,9 +162,12 @@ class GameSession:
         if self.showLog:
             print(text)
 
-    def assertActivePlayer(self, playerID):
+    def activePlayer(self):
         activeTeam = self.teams[self.activeTeamIdx]
-        activePlayer = activeTeam.players[activeTeam.activePlayerIdx]
+        return activeTeam.players[activeTeam.activePlayerIdx]
+
+    def assertActivePlayer(self, playerID):
+        activePlayer = self.activePlayer()
         if activePlayer.id != playerID:
             raise GameError(playerID + ' tried to act but it is ' + activePlayer.id + '\'s turn')
         return activePlayer
@@ -257,6 +260,8 @@ class GameSession:
     def recordPrevPhrase(self, prevPhrase):
         self.prevPhrase = prevPhrase
         self.clickedPhrases.append(prevPhrase)
+        if len(self.clickedPhrases) >= len(self.phrasesInHat):
+            self.endPlayerTurn(self.activePlayer().id)
 
     def confirmPhrases(self, playerID, acceptedPhrases):
         self.log(playerID + ' assigning phrases')

@@ -399,7 +399,7 @@ def createDebugMultiWordGame():
           ['nik', 'peter', 'jason'] 
         ],
         phrasesPerPlayer=2, 
-        secondsPerTurn=6,
+        secondsPerTurn=30,
         videoURL='http://zoom.com')
     
     game.recordPlayerPhrases('graham', ['The Axiom of Choice', 'Uncountable'])
