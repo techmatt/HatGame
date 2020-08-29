@@ -258,7 +258,7 @@ class GameSession:
         self.subPhase = GameSubPhase.ConfirmingPhrases
 
     def recordPrevPhrase(self, prevPhrase):
-        self.prevPhrase = prevPhrase
+        self.broadcastPhrase = prevPhrase
         self.clickedPhrases.append(prevPhrase)
         if len(self.clickedPhrases) >= len(self.phrasesInHat):
             self.endPlayerTurn(self.activePlayer().id)
@@ -282,7 +282,7 @@ class GameSession:
             
         #self.previousRoundPhrasesPlayerName = activePlayer.id
         self.previousRoundPhrases = copy.copy(acceptedPhrases)
-        self.prevPhrase = None # Don't carry-over prevPhrase to next turn
+        self.broadcastPhrase = None # Don't carry-over broadcastPhrase to next turn
         self.clickedPhrases = []
 
 
