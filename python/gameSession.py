@@ -278,7 +278,8 @@ class GameSession:
                 self.phrasesInHat.remove(phrase)
                 activeTeam.score += 1
             else:
-                raise GameError('phrase not in hat: ' + phrase)
+                self.log('ERROR: phrase not in hat: ' + phrase)
+                #raise GameError('phrase not in hat: ' + phrase)
             
         #self.previousRoundPhrasesPlayerName = activePlayer.id
         self.previousRoundPhrases = copy.copy(acceptedPhrases)
