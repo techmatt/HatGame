@@ -214,6 +214,13 @@ class GameSession:
                 raise GameError('phrases must contain at least 1 character') 
 
         for phrase in phrases:
+            # If the phrase is already in the list (two players had the same idea) add trailing " " as a hack
+            # to make it unique
+            if phrase in self.allPhrases:
+                original_phrase = phrase
+                while phrase in self.allPhrases:
+                    phrase = phrase + " "
+                self.log(f"Phrase '{original_phrase}' was already in the hat; adding '{phrase}' instead")
             player.phrases.append(phrase)
             self.allPhrases.append(phrase)
 
