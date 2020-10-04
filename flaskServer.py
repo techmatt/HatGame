@@ -31,10 +31,8 @@ activeGames = {}
 def eventStream(game, player):
     event = player.refreshEvent
     while True:
-        print('waiting for event to be set')
         event.wait()
         event.clear()
-        print('refresh event triggered for', player.id)
         yield 'data: refresh\n\n'
 
 @app.route('/')
@@ -211,7 +209,7 @@ def startNewGame():
     #    teams[playerIdx % 2].append(playerId)
 
     #print('new game:', id, 'players:', playerIds, 'teams:', teams)
-    print('new game:', id, 'teams:', teams)
+    print(f' game_log {gameId}: new game:', id, 'teams:', teams)
     newSession = GameSession(id, teams, phrasesPerPlayer, secondsPerTurn, videoURL)
     activeGames[id] = newSession
     return jsonify({'id' : id, 'gameURL' : '/games/' + id + '/'})
@@ -234,7 +232,7 @@ def recordPhrases(gameId, playerId):
         return ErrorResponse(err)
 
     try:
-        #print("Got phrases from player {}: {}".format(playerId, phrases))
+        print(f"game_log {gameId}: Got phrases from player {}: {}".format(playerId, phrases))
         game.recordPlayerPhrases(playerId, phrases)
     except GameError as err:
         traceback.print_exc()
@@ -263,6 +261,7 @@ def addPlayerToTeam(gameId, playerId):
         return ErrorResponse(err)
 
     try:
+        print(f"game_log {gameId}: Adding '{newPlayerName}' to team {teamIndex}")
         game.addPlayerToTeam(teamIndex, newPlayerName)
     except GameError as err:
         traceback.print_exc()
@@ -288,6 +287,7 @@ def removePlayer(gameId, playerId):
         return ErrorResponse(err)
 
     try:
+        print(f"game_log {gameId}: Removing player '{playerName}'")
         game.removePlayer(playerName)
     except GameError as err:
         traceback.print_exc()
@@ -307,7 +307,8 @@ def startTurn(gameId, playerId):
         return ErrorResponse(err)
 
     try:
-        game.startPlayerTurn(playerId)
+       print(f"game_log {gameId}: Starting turn: '{playerName}'")
+       game.startPlayerTurn(playerId)
     except GameError as err:
         traceback.print_exc()
         return ErrorResponse(err)
@@ -326,7 +327,8 @@ def endTurn(gameId, playerId):
         return ErrorResponse(err)
 
     try:
-        game.endPlayerTurn(playerId)
+        print(f"game_log {gameId}: Ending turn: '{playerName}'")
+       game.endPlayerTurn(playerId)
     except GameError as err:
         traceback.print_exc()
         return ErrorResponse(err)
@@ -337,6 +339,7 @@ def endTurn(gameId, playerId):
 def prevPhrase(gameId, prevPhrase):
     try:
         game = activeGames[gameId]
+        print(f"  game_log {gameId}: Got phrase '{prevPhrase}'")
         game.recordPrevPhrase(prevPhrase)
         game.signalRefresh()
     except err:
@@ -363,6 +366,7 @@ def confirmPhrases(gameId, playerId):
         return ErrorResponse(err)
 
     try:
+        print(f"game_log {gameId}: player '{playerId}' confirmed phrases {acceptedPhrases}")
         game.confirmPhrases(playerId, acceptedPhrases)
     except GameError as err:
         traceback.print_exc()
