@@ -8,6 +8,7 @@ from flask import Flask, request, Response, send_from_directory, render_template
 from werkzeug.exceptions import BadRequestKeyError
 from collections import Iterable
 from markupsafe import escape
+import logging
 
 from python.gameSession import GameSession, GameError
 
@@ -15,6 +16,8 @@ app = Flask(__name__)
 app.config.update(
     TEMPLATES_AUTO_RELOAD = True
 )
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.WARNING) # suppress the INFO messages flask logs on every request
 
 class ParamError(Exception):
     pass
@@ -232,7 +235,7 @@ def recordPhrases(gameId, playerId):
         return ErrorResponse(err)
 
     try:
-        print(f"game_log {gameId}: Got phrases from player {}: {}".format(playerId, phrases))
+        print(f"game_log {gameId}: Got phrases from player '{playerId}'': {phrases}")
         game.recordPlayerPhrases(playerId, phrases)
     except GameError as err:
         traceback.print_exc()
@@ -307,7 +310,7 @@ def startTurn(gameId, playerId):
         return ErrorResponse(err)
 
     try:
-       print(f"game_log {gameId}: Starting turn: '{playerName}'")
+       print(f"game_log {gameId}: Starting turn: '{playerId}'")
        game.startPlayerTurn(playerId)
     except GameError as err:
         traceback.print_exc()
@@ -327,8 +330,8 @@ def endTurn(gameId, playerId):
         return ErrorResponse(err)
 
     try:
-        print(f"game_log {gameId}: Ending turn: '{playerName}'")
-       game.endPlayerTurn(playerId)
+        print(f"game_log {gameId}: Ending turn: '{playerId}'")
+        game.endPlayerTurn(playerId)
     except GameError as err:
         traceback.print_exc()
         return ErrorResponse(err)
@@ -403,7 +406,7 @@ def createDebugMultiWordGame():
           ['nik', 'peter', 'jason'] 
         ],
         phrasesPerPlayer=2, 
-        secondsPerTurn=30,
+        secondsPerTurn=5,
         videoURL='http://zoom.com')
     
     game.recordPlayerPhrases('graham', ['The Axiom of Choice', 'Uncountable'])

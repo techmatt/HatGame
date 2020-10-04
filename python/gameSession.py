@@ -154,7 +154,6 @@ class GameSession:
         return result
 
     def signalRefresh(self):
-        print('signalling refresh')
         for player in self.playersByID.values():
             player.refreshEvent.set()
 
