@@ -515,7 +515,7 @@ class HatGameApp extends React.Component {
         e(CountdownTimer,
           {
             initialSeconds: this.state.secondsRemaining,
-            timerExpirationCallback: this.handleTimerExpiration.bind(this)
+            timerExpirationCallback: () => {} // It's not our turn, so do nothing on turn end
           }
         ),
         this.state.prevPhrase ? e('div',
