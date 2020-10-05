@@ -265,9 +265,11 @@ class GameSession:
 
     def recordPrevPhrase(self, prevPhrase):
         self.broadcastPhrase = prevPhrase
-        self.clickedPhrases.append(prevPhrase)
-        if len(self.clickedPhrases) >= len(self.phrasesInHat):
-            self.endPlayerTurn(self.activePlayer().id)
+        # sometimes a client notifies the server twice to record the same phrase, so check if we already have it
+        if prevPhrase not in self.clickedPhrases: 
+            self.clickedPhrases.append(prevPhrase)
+            if len(self.clickedPhrases) >= len(self.phrasesInHat):
+                self.endPlayerTurn(self.activePlayer().id)
 
     def confirmPhrases(self, playerID, acceptedPhrases):
         self.log(playerID + ' assigning phrases')
