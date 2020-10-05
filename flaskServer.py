@@ -211,8 +211,8 @@ def startNewGame():
     #for playerIdx, playerId in enumerate(playerIds):
     #    teams[playerIdx % 2].append(playerId)
 
-    #print('new game:', id, 'players:', playerIds, 'teams:', teams)
-    print(f' game_log {gameId}: new game:', id, 'teams:', teams)
+
+    print(f' game_log {id}: new game with teams: {teams}')
     newSession = GameSession(id, teams, phrasesPerPlayer, secondsPerTurn, videoURL)
     activeGames[id] = newSession
     return jsonify({'id' : id, 'gameURL' : '/games/' + id + '/'})
