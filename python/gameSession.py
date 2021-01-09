@@ -7,6 +7,7 @@ from datetime import datetime
 from enum import Enum
 from collections.abc import Iterable
 
+
 minContinuationTurnSeconds = 5.0
 
 class GameError(Exception):
@@ -42,6 +43,7 @@ class GameSession:
     def __init__(self, id, teamPlayerLists, phrasesPerPlayer, secondsPerTurn, videoURL):
         self.showLog = True
         self.id = id
+        self.lock = threading.Lock() # Used to prevent mutation APIs from interleaving
         
         print('game start', id, phrasesPerPlayer, secondsPerTurn, teamPlayerLists)
         self.phrasesPerPlayer = phrasesPerPlayer
@@ -194,40 +196,41 @@ class GameSession:
         self.phrasesInHat = list(self.allPhrases)
 
     def recordPlayerPhrases(self, playerID, phrases):
-        self.log(playerID + ' phrases: ' + str(phrases))
+        with self.lock:
+            self.log(playerID + ' phrases: ' + str(phrases))
 
-        if playerID not in self.playersByID:
-            print('playersByID:', self.playersByID.keys())
-            raise GameError(playerID + ' is not a valid player')
+            if playerID not in self.playersByID:
+                print('playersByID:', self.playersByID.keys())
+                raise GameError(playerID + ' is not a valid player')
 
-        player = self.playersByID[playerID]
-        
-        if len(player.phrases) > 0:
-            raise GameError(playerID + ' has already recorded phrases')
+            player = self.playersByID[playerID]
+            
+            if len(player.phrases) > 0:
+                raise GameError(playerID + ' has already recorded phrases')
 
-        if len(phrases) != self.phrasesPerPlayer:
-            raise GameError('invalid number of phrases recorded: ' + str(len(phrases)))
+            if len(phrases) != self.phrasesPerPlayer:
+                raise GameError('invalid number of phrases recorded: ' + str(len(phrases)))
 
-        for phrase in phrases:
-            if len(phrase) < 1 or phrase == ' ':
-                raise GameError('phrases must contain at least 1 character') 
+            for phrase in phrases:
+                if len(phrase) < 1 or phrase == ' ':
+                    raise GameError('phrases must contain at least 1 character') 
 
-        for phrase in phrases:
-            # If the phrase is already in the list (two players had the same idea) add trailing " " as a hack
-            # to make it unique
-            if phrase in self.allPhrases:
-                original_phrase = phrase
-                while phrase in self.allPhrases:
-                    phrase = phrase + " "
-                self.log(f"Phrase '{original_phrase}' was already in the hat; adding '{phrase}' instead")
-            player.phrases.append(phrase)
-            self.allPhrases.append(phrase)
+            for phrase in phrases:
+                # If the phrase is already in the list (two players had the same idea) add trailing " " as a hack
+                # to make it unique
+                if phrase in self.allPhrases:
+                    original_phrase = phrase
+                    while phrase in self.allPhrases:
+                        phrase = phrase + " "
+                    self.log(f"Phrase '{original_phrase}' was already in the hat; adding '{phrase}' instead")
+                player.phrases.append(phrase)
+                self.allPhrases.append(phrase)
 
-        if self.allPhrasesAdded():
-            self.log('all phrases completed, starting multiword round')
-            self.newMainPhase(GameMainPhase.MultiWord)
-            #self.activeTeamIdx = random.randint(0, len(self.teams) - 1)
-            self.activeTeamIdx = 0
+            if self.allPhrasesAdded():
+                self.log('all phrases completed, starting multiword round')
+                self.newMainPhase(GameMainPhase.MultiWord)
+                #self.activeTeamIdx = random.randint(0, len(self.teams) - 1)
+                self.activeTeamIdx = 0
 
     def allPhrasesAdded(self):
         for id, player in self.playersByID.items():
@@ -236,20 +239,25 @@ class GameSession:
         return True
 
     def startPlayerTurn(self, playerID):
-        self.log(playerID + ' turn starting')
+        with self.lock:
+            self.log(playerID + ' turn starting')
 
-        activePlayer = self.assertActivePlayer(playerID)
-        self.assertMainPhase([GameMainPhase.MultiWord, GameMainPhase.SingleWord, GameMainPhase.Charade])
-        self.assertSubPhase(GameSubPhase.WaitForStart)
-        
-        self.subPhase = GameSubPhase.Started
-        self.turnStartTime = datetime.now()
+            activePlayer = self.assertActivePlayer(playerID)
+            self.assertMainPhase([GameMainPhase.MultiWord, GameMainPhase.SingleWord, GameMainPhase.Charade])
+            self.assertSubPhase(GameSubPhase.WaitForStart)
+            
+            self.subPhase = GameSubPhase.Started
+            self.turnStartTime = datetime.now()
 
-        random.shuffle(self.phrasesInHat)
-        #for idx in range(0, min(self.phrasesPerTurn, len(self.phrasesInHat))):
-        #    self.activePhrases.append(self.phrasesInHat[idx])
+            random.shuffle(self.phrasesInHat)
+            #for idx in range(0, min(self.phrasesPerTurn, len(self.phrasesInHat))):
+            #    self.activePhrases.append(self.phrasesInHat[idx])
 
     def endPlayerTurn(self, playerID):
+        with self.lock:
+            self.endPlayerTurnWithoutLock(playerID)
+            
+    def endPlayerTurnWithoutLock(self, playerID):
         self.log(playerID + ' turn time complete')
         
         activePlayer = self.assertActivePlayer(playerID)
@@ -264,93 +272,97 @@ class GameSession:
         self.subPhase = GameSubPhase.ConfirmingPhrases
 
     def recordPrevPhrase(self, prevPhrase):
-        self.broadcastPhrase = prevPhrase
-        # sometimes a client notifies the server twice to record the same phrase, so check if we already have it
-        if prevPhrase not in self.clickedPhrases: 
-            self.clickedPhrases.append(prevPhrase)
-            if len(self.clickedPhrases) >= len(self.phrasesInHat):
-                self.endPlayerTurn(self.activePlayer().id)
+        with self.lock:
+            self.broadcastPhrase = prevPhrase
+            # sometimes a client notifies the server twice to record the same phrase, so check if we already have it
+            if prevPhrase not in self.clickedPhrases: 
+                self.clickedPhrases.append(prevPhrase)
+                if len(self.clickedPhrases) >= len(self.phrasesInHat):
+                    self.endPlayerTurnWithoutLock(self.activePlayer().id)
 
     def confirmPhrases(self, playerID, acceptedPhrases):
-        self.log(playerID + ' assigning phrases')
-        self.log('accepted: ' + str(acceptedPhrases))
+        with self.lock:
+            self.log(playerID + ' assigning phrases')
+            self.log('accepted: ' + str(acceptedPhrases))
 
-        activePlayer = self.assertActivePlayer(playerID)
-        self.assertMainPhase([GameMainPhase.MultiWord, GameMainPhase.SingleWord, GameMainPhase.Charade])
-        # The subphase is typically GameSubPhase.ConfirmingPhrases, but to enable the host 
-        # control that skips a player, the subPhase can be anything
-        
-        activeTeam = self.teams[self.activeTeamIdx]
-        for phrase in acceptedPhrases:
-            if phrase in self.phrasesInHat:
-                self.phrasesInHat.remove(phrase)
-                activeTeam.score += 1
-            else:
-                self.log('ERROR: phrase not in hat: ' + phrase)
-                #raise GameError('phrase not in hat: ' + phrase)
+            activePlayer = self.assertActivePlayer(playerID)
+            self.assertMainPhase([GameMainPhase.MultiWord, GameMainPhase.SingleWord, GameMainPhase.Charade])
+            # The subphase is typically GameSubPhase.ConfirmingPhrases, but to enable the host 
+            # control that skips a player, the subPhase can be anything
             
-        #self.previousRoundPhrasesPlayerName = activePlayer.id
-        self.previousRoundPhrases = copy.copy(acceptedPhrases)
-        self.broadcastPhrase = None # Don't carry-over broadcastPhrase to next turn
-        self.clickedPhrases = []
+            activeTeam = self.teams[self.activeTeamIdx]
+            for phrase in acceptedPhrases:
+                if phrase in self.phrasesInHat:
+                    self.phrasesInHat.remove(phrase)
+                    activeTeam.score += 1
+                else:
+                    self.log('ERROR: phrase not in hat: ' + phrase)
+                    #raise GameError('phrase not in hat: ' + phrase)
+                
+            #self.previousRoundPhrasesPlayerName = activePlayer.id
+            self.previousRoundPhrases = copy.copy(acceptedPhrases)
+            self.broadcastPhrase = None # Don't carry-over broadcastPhrase to next turn
+            self.clickedPhrases = []
 
 
-        shouldAdvancePlayer = True
-        if len(self.phrasesInHat) == 0:
+            shouldAdvancePlayer = True
+            if len(self.phrasesInHat) == 0:
 
-            if self.leftoverTurnTime >= minContinuationTurnSeconds:
-                shouldAdvancePlayer = False
+                if self.leftoverTurnTime >= minContinuationTurnSeconds:
+                    shouldAdvancePlayer = False
 
-            if self.mainPhase == GameMainPhase.MultiWord:
-                self.newMainPhase(GameMainPhase.SingleWord)
-            elif self.mainPhase == GameMainPhase.SingleWord:
-                self.newMainPhase(GameMainPhase.Charade)
+                if self.mainPhase == GameMainPhase.MultiWord:
+                    self.newMainPhase(GameMainPhase.SingleWord)
+                elif self.mainPhase == GameMainPhase.SingleWord:
+                    self.newMainPhase(GameMainPhase.Charade)
+                else:
+                    self.log('all phrases in charade completed, game complete')
+                    self.mainPhase = GameMainPhase.Done
+
+            if shouldAdvancePlayer:
+                activeTeam.activePlayerIdx = (activeTeam.activePlayerIdx + 1) % len(activeTeam.players)
+                self.activeTeamIdx = (self.activeTeamIdx + 1) % len(self.teams)
             else:
-                self.log('all phrases in charade completed, game complete')
-                self.mainPhase = GameMainPhase.Done
-
-        if shouldAdvancePlayer:
-            activeTeam.activePlayerIdx = (activeTeam.activePlayerIdx + 1) % len(activeTeam.players)
-            self.activeTeamIdx = (self.activeTeamIdx + 1) % len(self.teams)
-        else:
-            self.continuationTurnSeconds = self.leftoverTurnTime
-        self.subPhase = GameSubPhase.WaitForStart
+                self.continuationTurnSeconds = self.leftoverTurnTime
+            self.subPhase = GameSubPhase.WaitForStart
 
     def addPlayerToTeam(self, teamIndex, newPlayerName):
-        if teamIndex < 0 or teamIndex >= len(self.teams):
-            raise GameError('teamIndex out of bounds: ' + str(teamIndex))
-        if len(newPlayerName) == 0:
-            raise GameError('player names cannot be empty')
-        if newPlayerName in self.playersByID:
-            raise GameError('player name already exists')
+        with self.lock:
+            if teamIndex < 0 or teamIndex >= len(self.teams):
+                raise GameError('teamIndex out of bounds: ' + str(teamIndex))
+            if len(newPlayerName) == 0:
+                raise GameError('player names cannot be empty')
+            if newPlayerName in self.playersByID:
+                raise GameError('player name already exists')
 
-        print('adding player to team:', teamIndex, newPlayerName)
+            print('adding player to team:', teamIndex, newPlayerName)
 
-        newPlayerTeam = self.teams[teamIndex]
-        newPlayer = Player(newPlayerName)
-        self.playersByID[newPlayerName] = newPlayer
-        newPlayerTeam.players.append(newPlayer)
-        
-        # rebuild the player list by reiterating through the teams
-        """self.players = []
-        for team in self.teams:
-            for player in team.players:
-                self.players.append(player)"""
+            newPlayerTeam = self.teams[teamIndex]
+            newPlayer = Player(newPlayerName)
+            self.playersByID[newPlayerName] = newPlayer
+            newPlayerTeam.players.append(newPlayer)
+            
+            # rebuild the player list by reiterating through the teams
+            """self.players = []
+            for team in self.teams:
+                for player in team.players:
+                    self.players.append(player)"""
 
     def removePlayer(self, playerName):
-        print('removing player:', playerName)
+        with self.lock:
+            print('removing player:', playerName)
 
-        if playerName not in self.playersByID:
-            raise GameError('player name not found in player list')
+            if playerName not in self.playersByID:
+                raise GameError('player name not found in player list')
 
-        for team in self.teams:
-            filteredPlayers = list(filter(lambda player: player.id == playerName, team.players))
-            if len(filteredPlayers) == 1:
-                playerIdx = team.players.index(filteredPlayers[0])
-                del team.players[playerIdx]
-                return 'player removed'
+            for team in self.teams:
+                filteredPlayers = list(filter(lambda player: player.id == playerName, team.players))
+                if len(filteredPlayers) == 1:
+                    playerIdx = team.players.index(filteredPlayers[0])
+                    del team.players[playerIdx]
+                    return 'player removed'
 
-        raise GameError('player name not found in teams')
+            raise GameError('player name not found in teams')
         
 if __name__ == "__main__":
     print('hi!')
